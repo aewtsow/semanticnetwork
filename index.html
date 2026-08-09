@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="基于完整 valid_common 数据的中文量词局部语义网络。">
+  <title>中文量词语义网络</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="data/classifier_noun_data.js"></script>
+  <script defer src="data/classifier_similarity_data.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="site-header">
+      <div>
+        <p class="eyebrow">FQL · EXPLORATORY SEMANTIC NETWORK</p>
+        <h1>中文量词语义网络</h1>
+        <p class="intro">从局部关系出发，探索量词之间的语义接近性，以及量词与名词的典型搭配。</p>
+      </div>
+      <div class="dataset-summary" aria-label="数据规模">
+        <span><strong id="classifierCount">—</strong> 个量词</span>
+        <span><strong id="similarityCount">—</strong> 条正相似关系</span>
+        <span><strong id="nounRelationCount">—</strong> 条量词—名词关系</span>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <div class="tab-bar" role="tablist" aria-label="网络模块">
+        <button class="tab-button is-active" id="classifierTab" data-tab="classifier" role="tab" aria-selected="true">
+          量词—量词网络
+        </button>
+        <button class="tab-button" id="nounTab" data-tab="noun" role="tab" aria-selected="false">
+          量词—名词网络
+        </button>
+      </div>
+
+      <section class="control-bar" aria-label="网络控制">
+        <form class="search-control" id="searchForm">
+          <label for="classifierSearch">搜索量词</label>
+          <div class="search-row">
+            <input id="classifierSearch" list="classifierOptions" autocomplete="off" placeholder="例如：一棵">
+            <datalist id="classifierOptions"></datalist>
+            <button type="submit">定位</button>
+          </div>
+          <p class="control-message" id="searchMessage" role="status" aria-live="polite"></p>
+        </form>
+
+        <div class="slider-control" id="similarityControl">
+          <div class="control-heading">
+            <label for="similaritySlider">Cosine similarity</label>
+            <output id="similarityValue">0.000</output>
+          </div>
+          <input id="similaritySlider" type="range" min="0" max="1" step="0.001" value="0">
+          <p>显示 similarity ≥ 当前阈值的关系；数据本身仅包含正值。</p>
+        </div>
+
+        <div class="slider-control is-hidden" id="npmiControl">
+          <div class="control-heading">
+            <label for="npmiSlider">NPMI_log_co_score</label>
+            <output id="npmiValue">—</output>
+          </div>
+          <input id="npmiSlider" type="range" min="0" max="1" step="0.01" value="1">
+          <p>严格显示 score ≤ 当前阈值的搭配。</p>
+        </div>
+
+        <fieldset class="topn-control is-hidden" id="topNControl">
+          <legend>显示数量</legend>
+          <div class="segmented-control">
+            <button type="button" data-topn="10" class="is-active">Top 10</button>
+            <button type="button" data-topn="20">Top 20</button>
+            <button type="button" data-topn="50">Top 50</button>
+          </div>
+        </fieldset>
+      </section>
+
+      <div class="content-grid">
+        <section class="graph-card" aria-labelledby="graphTitle">
+          <div class="graph-toolbar">
+            <div>
+              <p class="section-kicker" id="graphModeLabel">量词—量词局部网络</p>
+              <h2 id="graphTitle">—</h2>
+            </div>
+            <div class="graph-actions">
+              <div class="legend" aria-label="图例">
+                <span><i class="legend-dot classifier-dot"></i>量词</span>
+                <span id="nounLegend" class="is-hidden"><i class="legend-dot noun-dot"></i>名词</span>
+              </div>
+              <button type="button" class="secondary-button" id="resetView">重置视图</button>
+            </div>
+          </div>
+
+          <div class="graph-stage" id="graphStage">
+            <svg id="networkSvg" role="img" aria-labelledby="graphTitle graphDescription">
+              <desc id="graphDescription">可缩放、平移、拖动并点击节点的局部语义网络。</desc>
+              <g id="networkViewport">
+                <g id="edgeLayer"></g>
+                <g id="nodeLayer"></g>
+              </g>
+            </svg>
+            <div class="graph-empty is-hidden" id="graphEmpty"></div>
+            <div class="tooltip is-hidden" id="tooltip" role="tooltip"></div>
+            <p class="interaction-hint">滚轮缩放 · 拖动空白处平移 · 拖动节点调整位置 · 点击节点继续探索</p>
+          </div>
+        </section>
+
+        <aside class="info-panel" id="infoPanel" aria-live="polite">
+          <p class="section-kicker">当前节点信息</p>
+          <h2 id="infoTitle">—</h2>
+          <div class="metric-card" id="primaryMetric"></div>
+          <div class="threshold-note is-hidden" id="thresholdNote"></div>
+          <div id="infoSections"></div>
+        </aside>
+      </div>
+    </main>
+
+    <footer>
+      <p>节点大小和邻居资格始终基于完整数据；阈值仅改变当前可见关系。</p>
+    </footer>
+  </div>
+
+  <noscript>此网页需要启用 JavaScript 才能显示交互网络。</noscript>
+</body>
+</html>
