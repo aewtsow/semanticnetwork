@@ -19,12 +19,13 @@ const dom = {
   searchMessage: document.querySelector("#searchMessage"),
   similarityControl: document.querySelector("#similarityControl"),
   similaritySlider: document.querySelector("#similaritySlider"),
-  similarityValue: document.querySelector("#similarityValue"),
+  similarityNumber: document.querySelector("#similarityNumber"),
   npmiControl: document.querySelector("#npmiControl"),
   npmiSlider: document.querySelector("#npmiSlider"),
-  npmiValue: document.querySelector("#npmiValue"),
+  npmiNumber: document.querySelector("#npmiNumber"),
   topNControl: document.querySelector("#topNControl"),
   topNButtons: [...document.querySelectorAll("[data-topn]")],
+  labelMode: document.querySelector("#labelMode"),
   graphStage: document.querySelector("#graphStage"),
   svg: document.querySelector("#networkSvg"),
   viewport: document.querySelector("#networkViewport"),
@@ -34,7 +35,10 @@ const dom = {
   graphTitle: document.querySelector("#graphTitle"),
   graphEmpty: document.querySelector("#graphEmpty"),
   nounLegend: document.querySelector("#nounLegend"),
+  networkStats: document.querySelector("#networkStats"),
+  graphLegendContent: document.querySelector("#graphLegendContent"),
   tooltip: document.querySelector("#tooltip"),
+  relayoutGraph: document.querySelector("#relayoutGraph"),
   resetView: document.querySelector("#resetView"),
   infoTitle: document.querySelector("#infoTitle"),
   primaryMetric: document.querySelector("#primaryMetric"),
@@ -111,6 +115,8 @@ const state = {
   similarityThreshold: 0,
   npmiThreshold: scoreMax,
   topN: 10,
+  labelMode: "important",
+  layoutRevision: 0,
   view: { x: 0, y: 0, scale: 1 },
   currentGraph: { nodes: [], edges: [] },
   drag: null,
@@ -134,18 +140,49 @@ function scaleLog(value, [min, max], outputMin, outputMax) {
   return outputMin + normalized * (outputMax - outputMin);
 }
 
+function scaleSqrt(value, [min, max], outputMin, outputMax) {
+  if (max === min) return (outputMin + outputMax) / 2;
+  const normalized = (Math.sqrt(value) - Math.sqrt(min)) / (Math.sqrt(max) - Math.sqrt(min));
+  return outputMin + normalized * (outputMax - outputMin);
+}
+
+function scaleLinear(value, [min, max], outputMin, outputMax) {
+  if (max === min) return (outputMin + outputMax) / 2;
+  const normalized = (value - min) / (max - min);
+  return outputMin + normalized * (outputMax - outputMin);
+}
+
 function formatNumber(value, digits = 3) {
   return Number(value).toFixed(digits);
 }
 
 function classifierNodeSize(classifier, center = false) {
-  const size = scaleLog(classifierNounCount.get(classifier) || 1, classifierCountRange, 10, 24);
+  const size = scaleSqrt(classifierNounCount.get(classifier) || 1, classifierCountRange, 10, 24);
   return center ? Math.max(21, size + 5) : size;
 }
 
 function nounNodeSize(noun, center = false) {
-  const size = scaleLog(nounClassifierCount.get(noun) || 1, nounCountRange, 9, 22);
+  const size = scaleSqrt(nounClassifierCount.get(noun) || 1, nounCountRange, 9, 22);
   return center ? Math.max(21, size + 5) : size;
+}
+
+function classifierTooltip(classifier, contextLine = "") {
+  const similarities = classifierToSimilarities.get(classifier) || [];
+  const highest = similarities[0]?.similarity ?? 0;
+  const lines = [
+    `搭配名词数：${classifierNounCount.get(classifier).toLocaleString()}`,
+    `相似量词数：${similarities.length.toLocaleString()}`,
+    `最高 cosine：${formatNumber(highest)}`,
+  ];
+  if (contextLine) lines.push(contextLine);
+  return lines.join("<br>");
+}
+
+function nounTooltip(noun, contextLine) {
+  return [
+    `完整数据可搭配量词数：${nounClassifierCount.get(noun).toLocaleString()}`,
+    contextLine,
+  ].join("<br>");
 }
 
 function buildClassifierGraph() {
@@ -170,13 +207,13 @@ function buildClassifierGraph() {
     fullCount: classifierNounCount.get(center),
     x: 0,
     y: 0,
-    tooltip: `搭配名词数：${classifierNounCount.get(center).toLocaleString()}`,
+    tooltip: classifierTooltip(center),
   }];
   const edges = [];
 
   for (const row of visible) {
     const similarityRatio = row.similarity / similarityMax;
-    const angle = -Math.PI / 2 + stableIndex.get(row.classifier) * 2.399963;
+    const baseAngle = -Math.PI / 2 + stableIndex.get(row.classifier) * 2.399963;
     nodes.push({
       id: `c:${row.classifier}`,
       label: row.classifier,
@@ -184,22 +221,32 @@ function buildClassifierGraph() {
       center: false,
       size: classifierNodeSize(row.classifier),
       fullCount: classifierNounCount.get(row.classifier),
-      angle,
+      baseAngle,
       distanceFactor: 1 - Math.pow(similarityRatio, 0.34),
-      tooltip: `cosine：${formatNumber(row.similarity)}<br>共同名词：${row.commonNouns.toLocaleString()}`,
+      tooltip: classifierTooltip(
+        row.classifier,
+        `与“${center}”的 cosine：${formatNumber(row.similarity)}`,
+      ),
     });
     edges.push({
       id: `s:${center}|${row.classifier}`,
       source: `c:${center}`,
       target: `c:${row.classifier}`,
       width: scaleLog(row.commonNouns, commonNounRange, 1.2, 7),
+      opacity: scaleLinear(row.similarity, [0, similarityMax], 0.18, 0.92),
       metric: "similarity",
       value: row.similarity,
       commonNouns: row.commonNouns,
+      tooltip: `<strong>${center} ↔ ${row.classifier}</strong><br>Cosine similarity：${formatNumber(row.similarity)}<br>共同搭配名词数：${row.commonNouns.toLocaleString()}`,
     });
   }
 
-  return { nodes, edges, visibleCount: visible.length };
+  return {
+    nodes,
+    edges,
+    visibleCount: visible.length,
+    thresholdCount: visible.length,
+  };
 }
 
 function buildClassifierNounGraph() {
@@ -210,9 +257,8 @@ function buildClassifierNounGraph() {
   const eligible = allRelations.filter(
     (row) => (nounClassifierCount.get(row.word) || 0) >= 2,
   );
-  const filtered = eligible
-    .filter((row) => row.score <= state.npmiThreshold)
-    .slice(0, state.topN);
+  const thresholdMatches = eligible.filter((row) => row.score <= state.npmiThreshold);
+  const filtered = thresholdMatches.slice(0, state.topN);
   const stableIndex = new Map(eligible.map((row, index) => [row.word, index]));
 
   const nodes = [{
@@ -224,12 +270,12 @@ function buildClassifierNounGraph() {
     fullCount: classifierNounCount.get(classifier),
     x: 0,
     y: 0,
-    tooltip: `完整数据搭配名词数：${classifierNounCount.get(classifier).toLocaleString()}`,
+    tooltip: classifierTooltip(classifier),
   }];
   const edges = [];
 
   for (const row of filtered) {
-    const angle = -Math.PI / 2 + stableIndex.get(row.word) * 2.399963;
+    const baseAngle = -Math.PI / 2 + stableIndex.get(row.word) * 2.399963;
     nodes.push({
       id: `n:${row.word}`,
       label: row.word,
@@ -237,29 +283,39 @@ function buildClassifierNounGraph() {
       center: false,
       size: nounNodeSize(row.word),
       fullCount: nounClassifierCount.get(row.word),
-      angle,
+      baseAngle,
       distanceFactor: 1 - Math.pow(row.score / scoreMax, 0.32),
-      tooltip: `NPMI_log_co_score：${formatNumber(row.score)}<br>完整数据搭配量词数：${nounClassifierCount.get(row.word)}`,
+      tooltip: nounTooltip(
+        row.word,
+        `与“${classifier}”的 NPMI_log_co_score：${formatNumber(row.score)}`,
+      ),
     });
     edges.push({
       id: `n:${classifier}|${row.word}`,
       source: `c:${classifier}`,
       target: `n:${row.word}`,
       width: scaleLog(row.score, [scoreMin, scoreMax], 1.1, 6.5),
+      opacity: scaleLinear(row.score, [scoreMin, scoreMax], 0.24, 0.88),
       metric: "score",
       value: row.score,
+      tooltip: `<strong>${classifier} ↔ ${row.word}</strong><br>NPMI_log_co_score：${formatNumber(row.score)}`,
     });
   }
 
-  return { nodes, edges, visibleCount: filtered.length, visibleRelations: filtered };
+  return {
+    nodes,
+    edges,
+    visibleCount: filtered.length,
+    thresholdCount: thresholdMatches.length,
+    visibleRelations: filtered,
+  };
 }
 
 function buildNounCenterGraph() {
   const noun = state.nounCenter;
   const allRelations = nounToClassifiers.get(noun) || [];
-  const filtered = allRelations
-    .filter((row) => row.score <= state.npmiThreshold)
-    .slice(0, state.topN);
+  const thresholdMatches = allRelations.filter((row) => row.score <= state.npmiThreshold);
+  const filtered = thresholdMatches.slice(0, state.topN);
   const stableIndex = new Map(allRelations.map((row, index) => [row.classifier, index]));
 
   const nodes = [{
@@ -271,12 +327,12 @@ function buildNounCenterGraph() {
     fullCount: nounClassifierCount.get(noun),
     x: 0,
     y: 0,
-    tooltip: `完整数据搭配量词数：${nounClassifierCount.get(noun)}`,
+    tooltip: nounTooltip(noun, `当前阈值下可见量词数：${filtered.length}`),
   }];
   const edges = [];
 
   for (const row of filtered) {
-    const angle = -Math.PI / 2 + stableIndex.get(row.classifier) * 2.399963;
+    const baseAngle = -Math.PI / 2 + stableIndex.get(row.classifier) * 2.399963;
     nodes.push({
       id: `c:${row.classifier}`,
       label: row.classifier,
@@ -284,21 +340,32 @@ function buildNounCenterGraph() {
       center: false,
       size: classifierNodeSize(row.classifier),
       fullCount: classifierNounCount.get(row.classifier),
-      angle,
+      baseAngle,
       distanceFactor: 1 - Math.pow(row.score / scoreMax, 0.32),
-      tooltip: `NPMI_log_co_score：${formatNumber(row.score)}<br>完整数据搭配名词数：${classifierNounCount.get(row.classifier).toLocaleString()}`,
+      tooltip: classifierTooltip(
+        row.classifier,
+        `与“${noun}”的 NPMI_log_co_score：${formatNumber(row.score)}`,
+      ),
     });
     edges.push({
       id: `n:${noun}|${row.classifier}`,
       source: `n:${noun}`,
       target: `c:${row.classifier}`,
       width: scaleLog(row.score, [scoreMin, scoreMax], 1.1, 6.5),
+      opacity: scaleLinear(row.score, [scoreMin, scoreMax], 0.24, 0.88),
       metric: "score",
       value: row.score,
+      tooltip: `<strong>${noun} ↔ ${row.classifier}</strong><br>NPMI_log_co_score：${formatNumber(row.score)}`,
     });
   }
 
-  return { nodes, edges, visibleCount: filtered.length, visibleRelations: filtered };
+  return {
+    nodes,
+    edges,
+    visibleCount: filtered.length,
+    thresholdCount: thresholdMatches.length,
+    visibleRelations: filtered,
+  };
 }
 
 function assignNodePositions(graph) {
@@ -313,6 +380,7 @@ function assignNodePositions(graph) {
       node.y = 0;
       continue;
     }
+    node.angle = node.baseAngle + state.layoutRevision * 0.47;
     node.radius = nearRadius + (farRadius - nearRadius) * node.distanceFactor;
   }
 
@@ -353,7 +421,7 @@ function separateNodeAngles(nodes) {
   }
 }
 
-function renderNetwork() {
+function renderNetwork(resetView = true) {
   const graph = state.activeTab === "classifier"
     ? buildClassifierGraph()
     : buildClassifierNounGraph();
@@ -362,9 +430,12 @@ function renderNetwork() {
   document.body.dataset.activeTab = state.activeTab;
   document.body.dataset.currentClassifier = state.currentClassifier;
   document.body.dataset.nounCenter = state.nounCenter || "";
-  state.view = { x: 0, y: 0, scale: 1 };
+  document.body.dataset.labelMode = state.labelMode;
+  if (resetView) state.view = { x: 0, y: 0, scale: 1 };
   drawGraph(graph);
   updateGraphHeading();
+  renderNetworkStats(graph);
+  renderGraphLegend();
   renderInformation(graph);
 }
 
@@ -372,6 +443,7 @@ function drawGraph(graph) {
   dom.edgeLayer.replaceChildren();
   dom.nodeLayer.replaceChildren();
   const nodeById = new Map(graph.nodes.map((node) => [node.id, node]));
+  markImportantLabels(graph);
 
   for (const edge of graph.edges) {
     const source = nodeById.get(edge.source);
@@ -389,8 +461,21 @@ function drawGraph(graph) {
       x2: target.x,
       y2: target.y,
       "stroke-width": edge.width,
+      "stroke-opacity": edge.opacity,
     });
-    dom.edgeLayer.append(line);
+    const hitLine = createSvg("line", {
+      class: "network-edge-hit",
+      "data-edge-id": edge.id,
+      "data-source": edge.source,
+      "data-target": edge.target,
+      x1: source.x,
+      y1: source.y,
+      x2: target.x,
+      y2: target.y,
+      "stroke-width": Math.max(12, edge.width + 8),
+    });
+    bindEdgeEvents(hitLine, edge);
+    dom.edgeLayer.append(line, hitLine);
   }
 
   for (const node of graph.nodes) {
@@ -400,6 +485,7 @@ function drawGraph(graph) {
       "data-label": node.label,
       "data-node-type": node.type,
       "data-full-count": node.fullCount,
+      "data-center": String(node.center),
       transform: `translate(${node.x} ${node.y})`,
       tabindex: "0",
       role: "button",
@@ -423,6 +509,94 @@ function drawGraph(graph) {
   dom.graphEmpty.textContent = graph.visibleCount === 0
     ? "当前阈值下没有可显示的邻居。中心节点仍然保留；请调整阈值继续探索。"
     : "";
+  updateLabelVisibility();
+  updateViewportTransform();
+}
+
+function markImportantLabels(graph) {
+  const neighbors = graph.nodes.filter((node) => !node.center);
+  const importantCount = Math.min(8, neighbors.length);
+  const importantIds = new Set(
+    [...neighbors]
+      .sort((a, b) => b.size - a.size)
+      .slice(0, importantCount)
+      .map((node) => node.id),
+  );
+  for (const node of graph.nodes) {
+    node.importantLabel = node.center || importantIds.has(node.id);
+  }
+}
+
+function renderNetworkStats(graph) {
+  const center = state.nounCenter || state.currentClassifier;
+  const stats = state.activeTab === "classifier"
+    ? [
+        ["当前中心", center],
+        ["当前可见量词", graph.nodes.length.toLocaleString()],
+        ["当前可见关系", graph.edges.length.toLocaleString()],
+        ["Cosine", `≥ ${formatNumber(state.similarityThreshold)}`],
+      ]
+    : [
+        ["当前中心", center],
+        ["符合当前阈值", `${graph.thresholdCount.toLocaleString()} 个${state.nounCenter ? "量词" : "名词"}`],
+        ["当前显示", `${graph.visibleCount.toLocaleString()} / Top ${state.topN}`],
+        ["NPMI_log_co_score", `≤ ${formatNumber(state.npmiThreshold)}`],
+      ];
+
+  dom.networkStats.replaceChildren(...stats.map(([label, value]) => {
+    const item = document.createElement("span");
+    item.append(`${label}：`, Object.assign(document.createElement("strong"), { textContent: value }));
+    return item;
+  }));
+}
+
+function renderGraphLegend() {
+  const lines = state.activeTab === "classifier"
+    ? [
+        "节点大小 = 完整数据中的搭配名词数（平方根缩放）",
+        "边宽 = 共同搭配名词数",
+        "边深浅 = Cosine similarity",
+        "节点距离 = Cosine similarity（越相似越近）",
+      ]
+    : [
+        "蓝灰节点 = 量词；赭色节点 = 名词",
+        "名词节点大小 = 完整数据中的可搭配量词数（平方根缩放）",
+        "边宽与深浅 = NPMI_log_co_score",
+      ];
+  dom.graphLegendContent.replaceChildren(...lines.map((line) => {
+    const paragraph = document.createElement("p");
+    paragraph.textContent = line;
+    return paragraph;
+  }));
+}
+
+function relayoutCurrentGraph() {
+  state.layoutRevision += 1;
+  assignNodePositions(state.currentGraph);
+  drawGraph(state.currentGraph);
+}
+
+function resetView() {
+  const rect = dom.graphStage.getBoundingClientRect();
+  const center = state.currentGraph.nodes.find((node) => node.center);
+  if (!center) return;
+
+  const horizontalExtent = Math.max(
+    1,
+    ...state.currentGraph.nodes.map((node) => Math.abs(node.x - center.x) + node.size + 24),
+  );
+  const verticalExtent = Math.max(
+    1,
+    ...state.currentGraph.nodes.map((node) => Math.abs(node.y - center.y) + node.size + 24),
+  );
+  const fitScale = Math.min(
+    1,
+    (rect.width * 0.46) / horizontalExtent,
+    (rect.height * 0.43) / verticalExtent,
+  );
+  state.view.scale = clamp(fitScale, 0.5, 1);
+  state.view.x = -center.x * state.view.scale;
+  state.view.y = -center.y * state.view.scale;
   updateViewportTransform();
 }
 
@@ -460,6 +634,18 @@ function bindNodeEvents(element, node) {
   });
 }
 
+function bindEdgeEvents(element, edge) {
+  element.addEventListener("pointerenter", (event) => {
+    highlightEdge(edge);
+    showTooltip(event, edge.tooltip);
+  });
+  element.addEventListener("pointermove", positionTooltip);
+  element.addEventListener("pointerleave", () => {
+    clearHighlight();
+    hideTooltip();
+  });
+}
+
 function activateNode(node) {
   if (node.center) return;
   if (state.activeTab === "classifier") {
@@ -491,18 +677,51 @@ function highlightNode(nodeId) {
     }
   }
   for (const element of dom.nodeLayer.children) {
+    element.classList.toggle("is-hovered", element.dataset.nodeId === nodeId);
+    element.classList.toggle("is-connected", connected.has(element.dataset.nodeId));
     element.classList.toggle("is-muted", !connected.has(element.dataset.nodeId));
   }
-  for (const element of dom.edgeLayer.children) {
+  for (const element of dom.edgeLayer.querySelectorAll(".network-edge")) {
     const active = element.dataset.source === nodeId || element.dataset.target === nodeId;
     element.classList.toggle("is-active", active);
     element.classList.toggle("is-muted", !active);
   }
+  updateLabelVisibility(new Set([nodeId]));
+}
+
+function highlightEdge(edge) {
+  const connected = new Set([edge.source, edge.target]);
+  for (const element of dom.nodeLayer.children) {
+    element.classList.toggle("is-connected", connected.has(element.dataset.nodeId));
+    element.classList.toggle("is-muted", !connected.has(element.dataset.nodeId));
+  }
+  for (const element of dom.edgeLayer.querySelectorAll(".network-edge")) {
+    const active = element.dataset.edgeId === edge.id;
+    element.classList.toggle("is-active", active);
+    element.classList.toggle("is-muted", !active);
+  }
+  updateLabelVisibility(connected);
 }
 
 function clearHighlight() {
-  for (const element of [...dom.nodeLayer.children, ...dom.edgeLayer.children]) {
+  for (const element of dom.nodeLayer.children) {
+    element.classList.remove("is-muted", "is-hovered", "is-connected");
+  }
+  for (const element of dom.edgeLayer.querySelectorAll(".network-edge")) {
     element.classList.remove("is-muted", "is-active");
+  }
+  updateLabelVisibility();
+}
+
+function updateLabelVisibility(temporaryIds = new Set()) {
+  const nodeById = new Map(state.currentGraph.nodes.map((node) => [node.id, node]));
+  for (const element of dom.nodeLayer.children) {
+    const node = nodeById.get(element.dataset.nodeId);
+    const visible = node.center
+      || state.labelMode === "all"
+      || (state.labelMode === "important" && node.importantLabel)
+      || temporaryIds.has(node.id);
+    element.classList.toggle("is-label-visible", visible);
   }
 }
 
@@ -514,8 +733,13 @@ function showTooltip(event, html) {
 
 function positionTooltip(event) {
   const rect = dom.graphStage.getBoundingClientRect();
-  dom.tooltip.style.left = `${event.clientX - rect.left}px`;
-  dom.tooltip.style.top = `${event.clientY - rect.top}px`;
+  const margin = 10;
+  const desiredX = event.clientX - rect.left + 12;
+  const desiredY = event.clientY - rect.top + 12;
+  const maxX = rect.width - dom.tooltip.offsetWidth - margin;
+  const maxY = rect.height - dom.tooltip.offsetHeight - margin;
+  dom.tooltip.style.left = `${Math.max(margin, Math.min(desiredX, maxX))}px`;
+  dom.tooltip.style.top = `${Math.max(margin, Math.min(desiredY, maxY))}px`;
 }
 
 function hideTooltip() {
@@ -750,6 +974,32 @@ function emptyList() {
   return message;
 }
 
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function applySimilarityThreshold(value) {
+  const max = Number(dom.similaritySlider.max);
+  state.similarityThreshold = clamp(Number(value), 0, max);
+  dom.similaritySlider.value = String(state.similarityThreshold);
+  dom.similarityNumber.value = formatNumber(state.similarityThreshold);
+  renderNetwork(false);
+}
+
+function applyNpmiThreshold(value) {
+  const max = Number(dom.npmiSlider.max);
+  state.npmiThreshold = clamp(Number(value), 0, max);
+  dom.npmiSlider.value = String(state.npmiThreshold);
+  dom.npmiNumber.value = formatNumber(state.npmiThreshold);
+  renderNetwork(false);
+}
+
+function normalizeNumberInput(input, currentValue) {
+  if (input.value.trim() === "" || !Number.isFinite(Number(input.value))) {
+    input.value = formatNumber(currentValue);
+  }
+}
+
 function configureControls() {
   dom.classifierCount.textContent = classifiers.length.toLocaleString();
   dom.similarityCount.textContent = similarityRelations.length.toLocaleString();
@@ -764,13 +1014,17 @@ function configureControls() {
   }
   dom.classifierOptions.append(options);
 
-  dom.similaritySlider.max = String(Math.ceil(similarityMax * 1000) / 1000);
+  const similarityControlMax = Math.ceil(similarityMax * 1000) / 1000;
+  dom.similaritySlider.max = String(similarityControlMax);
   dom.similaritySlider.value = "0";
-  dom.similarityValue.textContent = "0.000";
+  dom.similarityNumber.max = String(similarityControlMax);
+  dom.similarityNumber.value = "0.000";
   dom.npmiSlider.min = "0";
-  dom.npmiSlider.max = String(Math.ceil(scoreMax * 100) / 100);
+  const npmiControlMax = Math.ceil(scoreMax * 1000) / 1000;
+  dom.npmiSlider.max = String(npmiControlMax);
   dom.npmiSlider.value = String(scoreMax);
-  dom.npmiValue.textContent = formatNumber(scoreMax);
+  dom.npmiNumber.max = String(npmiControlMax);
+  dom.npmiNumber.value = formatNumber(scoreMax);
 }
 
 function switchTab(tabName) {
@@ -805,29 +1059,48 @@ function bindControls() {
   });
 
   dom.similaritySlider.addEventListener("input", () => {
-    state.similarityThreshold = Number(dom.similaritySlider.value);
-    dom.similarityValue.textContent = formatNumber(state.similarityThreshold);
-    renderNetwork();
+    applySimilarityThreshold(dom.similaritySlider.value);
+  });
+
+  dom.similarityNumber.addEventListener("input", () => {
+    if (dom.similarityNumber.value !== "") {
+      applySimilarityThreshold(dom.similarityNumber.value);
+    }
+  });
+  dom.similarityNumber.addEventListener("change", () => {
+    normalizeNumberInput(dom.similarityNumber, state.similarityThreshold);
   });
 
   dom.npmiSlider.addEventListener("input", () => {
-    state.npmiThreshold = Number(dom.npmiSlider.value);
-    dom.npmiValue.textContent = formatNumber(state.npmiThreshold);
-    renderNetwork();
+    applyNpmiThreshold(dom.npmiSlider.value);
+  });
+
+  dom.npmiNumber.addEventListener("input", () => {
+    if (dom.npmiNumber.value !== "") {
+      applyNpmiThreshold(dom.npmiNumber.value);
+    }
+  });
+  dom.npmiNumber.addEventListener("change", () => {
+    normalizeNumberInput(dom.npmiNumber, state.npmiThreshold);
   });
 
   for (const button of dom.topNButtons) {
     button.addEventListener("click", () => {
       state.topN = Number(button.dataset.topn);
       dom.topNButtons.forEach((item) => item.classList.toggle("is-active", item === button));
-      renderNetwork();
+      renderNetwork(false);
     });
   }
 
-  dom.resetView.addEventListener("click", () => {
-    state.view = { x: 0, y: 0, scale: 1 };
-    updateViewportTransform();
+  dom.labelMode.addEventListener("change", () => {
+    state.labelMode = dom.labelMode.value;
+    document.body.dataset.labelMode = state.labelMode;
+    updateLabelVisibility();
   });
+
+  dom.relayoutGraph.addEventListener("click", relayoutCurrentGraph);
+
+  dom.resetView.addEventListener("click", resetView);
 
   dom.svg.addEventListener("pointerdown", startPan);
   dom.svg.addEventListener("pointermove", (event) => {
@@ -856,13 +1129,21 @@ window.__NETWORK_DEBUG__ = {
       similarityThreshold: state.similarityThreshold,
       npmiThreshold: state.npmiThreshold,
       topN: state.topN,
+      labelMode: state.labelMode,
+      layoutRevision: state.layoutRevision,
+      view: { ...state.view },
       visibleNodeCount: state.currentGraph.nodes.length,
       visibleEdgeCount: state.currentGraph.edges.length,
+      thresholdCount: state.currentGraph.thresholdCount,
       visibleLabels: state.currentGraph.nodes.map((node) => node.label),
       visibleNodes: state.currentGraph.nodes.map((node) => ({
         label: node.label,
         type: node.type,
         center: node.center,
+        size: node.size,
+        fullCount: node.fullCount,
+        x: node.x,
+        y: node.y,
       })),
       visibleEdges: state.currentGraph.edges.map((edge) => ({
         source: edge.source,
@@ -870,6 +1151,8 @@ window.__NETWORK_DEBUG__ = {
         metric: edge.metric,
         value: edge.value,
         commonNouns: edge.commonNouns,
+        width: edge.width,
+        opacity: edge.opacity,
       })),
     };
   },

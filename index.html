@@ -49,18 +49,22 @@
         <div class="slider-control" id="similarityControl">
           <div class="control-heading">
             <label for="similaritySlider">Cosine similarity</label>
-            <output id="similarityValue">0.000</output>
           </div>
-          <input id="similaritySlider" type="range" min="0" max="1" step="0.001" value="0">
+          <div class="slider-row">
+            <input id="similaritySlider" type="range" min="0" max="1" step="0.001" value="0">
+            <input id="similarityNumber" class="number-input" type="number" min="0" max="1" step="0.001" value="0.000" aria-label="Cosine similarity 精确值">
+          </div>
           <p>显示 similarity ≥ 当前阈值的关系；数据本身仅包含正值。</p>
         </div>
 
         <div class="slider-control is-hidden" id="npmiControl">
           <div class="control-heading">
             <label for="npmiSlider">NPMI_log_co_score</label>
-            <output id="npmiValue">—</output>
           </div>
-          <input id="npmiSlider" type="range" min="0" max="1" step="0.01" value="1">
+          <div class="slider-row">
+            <input id="npmiSlider" type="range" min="0" max="1" step="0.001" value="1">
+            <input id="npmiNumber" class="number-input" type="number" min="0" max="1" step="0.001" value="1.000" aria-label="NPMI_log_co_score 精确值">
+          </div>
           <p>严格显示 score ≤ 当前阈值的搭配。</p>
         </div>
 
@@ -72,6 +76,15 @@
             <button type="button" data-topn="50">Top 50</button>
           </div>
         </fieldset>
+
+        <div class="label-control">
+          <label for="labelMode">标签显示</label>
+          <select id="labelMode">
+            <option value="important" selected>重要节点</option>
+            <option value="all">全部</option>
+            <option value="hover">仅悬停</option>
+          </select>
+        </div>
       </section>
 
       <div class="content-grid">
@@ -86,9 +99,12 @@
                 <span><i class="legend-dot classifier-dot"></i>量词</span>
                 <span id="nounLegend" class="is-hidden"><i class="legend-dot noun-dot"></i>名词</span>
               </div>
+              <button type="button" class="secondary-button" id="relayoutGraph">重新布局</button>
               <button type="button" class="secondary-button" id="resetView">重置视图</button>
             </div>
           </div>
+
+          <div class="network-stats" id="networkStats" aria-label="当前网络统计" aria-live="polite"></div>
 
           <div class="graph-stage" id="graphStage">
             <svg id="networkSvg" role="img" aria-labelledby="graphTitle graphDescription">
@@ -100,6 +116,10 @@
             </svg>
             <div class="graph-empty is-hidden" id="graphEmpty"></div>
             <div class="tooltip is-hidden" id="tooltip" role="tooltip"></div>
+            <details class="graph-legend" id="graphLegend" open>
+              <summary>图例</summary>
+              <div id="graphLegendContent"></div>
+            </details>
             <p class="interaction-hint">滚轮缩放 · 拖动空白处平移 · 拖动节点调整位置 · 点击节点继续探索</p>
           </div>
         </section>
