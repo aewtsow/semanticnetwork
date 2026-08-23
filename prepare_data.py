@@ -15,7 +15,14 @@ DATA_DIR = BASE_DIR / "data"
 CLASSIFIER_COL = "classifier"
 NOUN_COL = "word"
 WEIGHT_COL = "NPMI_log_co_score"
-REQUIRED_COLUMNS = [CLASSIFIER_COL, NOUN_COL, WEIGHT_COL]
+REQUIRED_COLUMNS = [
+    CLASSIFIER_COL,
+    NOUN_COL,
+    "co_occurrence",
+    "PMI",
+    "NPMI",
+    WEIGHT_COL,
+]
 
 
 def write_js(path, variable_name, records, source_note):
@@ -44,11 +51,12 @@ def main():
         raise ValueError(f"缺少必需字段：{missing_columns}")
 
     data = raw[REQUIRED_COLUMNS].copy()
-    data[WEIGHT_COL] = pd.to_numeric(data[WEIGHT_COL], errors="coerce")
+    metric_columns = ["co_occurrence", "PMI", "NPMI", WEIGHT_COL]
+    data[metric_columns] = data[metric_columns].apply(pd.to_numeric, errors="coerce")
     invalid_mask = (
         data[[CLASSIFIER_COL, NOUN_COL]].isna().any(axis=1)
-        | data[WEIGHT_COL].isna()
-        | ~np.isfinite(data[WEIGHT_COL])
+        | data[metric_columns].isna().any(axis=1)
+        | ~np.isfinite(data[metric_columns]).all(axis=1)
     )
     if invalid_mask.any():
         raise ValueError(f"必需字段存在 {int(invalid_mask.sum())} 条缺失或非有限记录，停止转换。")
@@ -98,9 +106,13 @@ def main():
         {
             "classifier": classifier,
             "word": word,
+            "coOccurrence": int(co_occurrence),
+            "pmi": float(pmi),
+            "npmi": float(npmi),
             "score": float(score),
         }
-        for classifier, word, score in data.itertuples(index=False, name=None)
+        for classifier, word, co_occurrence, pmi, npmi, score
+        in data.itertuples(index=False, name=None)
     ]
 
     similarity_records = [

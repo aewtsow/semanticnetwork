@@ -1,0 +1,7 @@
+build_cache/
+git/
+test_artifacts/
+__pycache__/
+*.py[cod]
+.DS_Store
+Thumbs.db

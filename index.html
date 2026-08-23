@@ -3,12 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="基于完整 valid_common 数据的中文量词局部语义网络。">
+  <meta name="description" content="基于 valid_common 与原始共现矩阵的中文量词及词汇语义网络。">
   <title>中文量词语义网络</title>
-  <link rel="stylesheet" href="style.css">
-  <script defer src="data/classifier_noun_data.js"></script>
-  <script defer src="data/classifier_similarity_data.js"></script>
-  <script defer src="app.js"></script>
+  <link rel="stylesheet" href="style.css?v=20260823-1">
+  <script defer src="data/classifier_noun_data.js?v=20260823-1"></script>
+  <script defer src="data/classifier_similarity_data.js?v=20260823-1"></script>
+  <script defer src="data/word_network_nodes.js?v=20260823-1"></script>
+  <script defer src="data/word_network_edges.js?v=20260823-1"></script>
+  <script defer src="app.js?v=20260823-1"></script>
 </head>
 <body>
   <div class="page-shell">
@@ -16,12 +18,13 @@
       <div>
         <p class="eyebrow">FQL · EXPLORATORY SEMANTIC NETWORK</p>
         <h1>中文量词语义网络</h1>
-        <p class="intro">从局部关系出发，探索量词之间的语义接近性，以及量词与名词的典型搭配。</p>
+        <p class="intro">从局部关系出发，探索量词之间的语义接近性、量词与名词的典型搭配，以及按词类定义的混合词汇关联。</p>
       </div>
       <div class="dataset-summary" aria-label="数据规模">
         <span><strong id="classifierCount">—</strong> 个量词</span>
         <span><strong id="similarityCount">—</strong> 条正相似关系</span>
         <span><strong id="nounRelationCount">—</strong> 条量词—名词关系</span>
+        <span><strong id="wordCount">—</strong> 个词汇网络词项</span>
       </div>
     </header>
 
@@ -33,11 +36,14 @@
         <button class="tab-button" id="nounTab" data-tab="noun" role="tab" aria-selected="false">
           量词—名词网络
         </button>
+        <button class="tab-button" id="wordTab" data-tab="word" role="tab" aria-selected="false">
+          词汇网络
+        </button>
       </div>
 
       <section class="control-bar" aria-label="网络控制">
         <form class="search-control" id="searchForm">
-          <label for="classifierSearch">搜索量词</label>
+          <label for="classifierSearch" id="searchLabel">搜索量词</label>
           <div class="search-row">
             <input id="classifierSearch" list="classifierOptions" autocomplete="off" placeholder="例如：一棵">
             <datalist id="classifierOptions"></datalist>
@@ -49,23 +55,35 @@
         <div class="slider-control" id="similarityControl">
           <div class="control-heading">
             <label for="similaritySlider">Cosine similarity</label>
+            <label class="metric-select compact-select">连接指标
+              <select id="similarityMetric" aria-label="量词—量词连接指标">
+                <option value="cosine">Cosine similarity</option>
+              </select>
+            </label>
           </div>
-          <div class="slider-row">
+          <div class="range-number-row">
             <input id="similaritySlider" type="range" min="0" max="1" step="0.001" value="0">
-            <input id="similarityNumber" class="number-input" type="number" min="0" max="1" step="0.001" value="0.000" aria-label="Cosine similarity 精确值">
+            <input id="similarityNumber" type="number" min="0" max="1" step="0.001" value="0" aria-label="Cosine similarity 精确阈值">
           </div>
           <p>显示 similarity ≥ 当前阈值的关系；数据本身仅包含正值。</p>
         </div>
 
         <div class="slider-control is-hidden" id="npmiControl">
           <div class="control-heading">
-            <label for="npmiSlider">NPMI_log_co_score</label>
+            <label for="nounMetric">连接指标</label>
+            <select id="nounMetric" aria-label="量词—名词连接指标">
+              <option value="score">NPMI_log_co_score</option>
+              <option value="npmi">NPMI</option>
+              <option value="pmi">PMI</option>
+              <option value="coOccurrence">Co-occurrence</option>
+            </select>
           </div>
-          <div class="slider-row">
-            <input id="npmiSlider" type="range" min="0" max="1" step="0.001" value="1">
-            <input id="npmiNumber" class="number-input" type="number" min="0" max="1" step="0.001" value="1.000" aria-label="NPMI_log_co_score 精确值">
+          <label class="threshold-label" for="npmiSlider" id="nounThresholdLabel">NPMI_log_co_score 阈值</label>
+          <div class="range-number-row">
+            <input id="npmiSlider" type="range" min="0" max="1" step="0.01" value="1">
+            <input id="npmiNumber" type="number" min="0" max="1" step="0.01" value="1" aria-label="量词—名词精确阈值">
           </div>
-          <p>严格显示 score ≤ 当前阈值的搭配。</p>
+          <p id="nounThresholdHelp">严格显示 NPMI_log_co_score ≤ 当前阈值的搭配。</p>
         </div>
 
         <fieldset class="topn-control is-hidden" id="topNControl">
@@ -77,14 +95,73 @@
           </div>
         </fieldset>
 
-        <div class="label-control">
-          <label for="labelMode">标签显示</label>
+        <section class="word-controls is-hidden" id="wordControls" aria-label="词汇网络修剪与视觉编码">
+          <div class="word-threshold-grid">
+            <label>PMI threshold
+              <span class="range-number-row">
+                <input id="wordPmiSlider" type="range" min="0" max="30" step="0.01" value="3">
+                <input id="wordPmiNumber" type="number" min="0" max="30" step="0.01" value="3">
+              </span>
+            </label>
+            <label title="滑条采用按实际分布校准的非线性刻度：低频区变化更慢，高频区变化更快。">Co-occurrence threshold（非线性）
+              <span class="range-number-row">
+                <input id="wordCoSlider" type="range" min="0" max="1000" step="1" value="365" aria-label="Co-occurrence threshold 非线性滑条">
+                <input id="wordCoNumber" type="number" min="1" max="26021095" step="1" value="30">
+              </span>
+            </label>
+            <label>Degree threshold
+              <span class="range-number-row">
+                <input id="wordDegreeSlider" type="range" min="0" max="400" step="1" value="3">
+                <input id="wordDegreeNumber" type="number" min="0" max="400" step="1" value="3">
+              </span>
+            </label>
+          </div>
+          <div class="word-metric-grid">
+            <label>节点距离依据
+              <select id="wordDistanceMetric">
+                <option value="pmi">PMI</option>
+                <option value="coOccurrence">Co-occurrence</option>
+                <option value="npmi">NPMI</option>
+                <option value="score">NPMI_log_co_score</option>
+              </select>
+            </label>
+            <label>边宽依据
+              <select id="wordWidthMetric">
+                <option value="coOccurrence">Co-occurrence</option>
+                <option value="pmi">PMI</option>
+                <option value="npmi">NPMI</option>
+                <option value="score">NPMI_log_co_score</option>
+              </select>
+            </label>
+            <label>节点大小依据
+              <select id="wordSizeMetric">
+                <option value="currentDegree">Current Degree</option>
+                <option value="fullDegree">Full Degree</option>
+                <option value="coWithTarget">Co-occurrence with current target</option>
+                <option value="betweenness">Betweenness（未计算）</option>
+                <option value="closeness">Closeness（未计算）</option>
+                <option value="eigenvector">Eigenvector</option>
+                <option value="clustering">Clustering</option>
+              </select>
+            </label>
+            <label>最强关联词排序
+              <select id="wordRankMetric">
+                <option value="pmi">PMI</option>
+                <option value="coOccurrence">Co-occurrence</option>
+                <option value="npmi">NPMI</option>
+                <option value="score">NPMI_log_co_score</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <label class="label-control">标签显示
           <select id="labelMode">
-            <option value="important" selected>重要节点</option>
+            <option value="important">重要节点</option>
             <option value="all">全部</option>
             <option value="hover">仅悬停</option>
           </select>
-        </div>
+        </label>
       </section>
 
       <div class="content-grid">
@@ -99,12 +176,12 @@
                 <span><i class="legend-dot classifier-dot"></i>量词</span>
                 <span id="nounLegend" class="is-hidden"><i class="legend-dot noun-dot"></i>名词</span>
               </div>
-              <button type="button" class="secondary-button" id="relayoutGraph">重新布局</button>
+              <button type="button" class="secondary-button" id="relayoutView">重新布局</button>
               <button type="button" class="secondary-button" id="resetView">重置视图</button>
             </div>
           </div>
 
-          <div class="network-stats" id="networkStats" aria-label="当前网络统计" aria-live="polite"></div>
+          <div class="network-stats" id="networkStats" aria-live="polite"></div>
 
           <div class="graph-stage" id="graphStage">
             <svg id="networkSvg" role="img" aria-labelledby="graphTitle graphDescription">
@@ -116,9 +193,9 @@
             </svg>
             <div class="graph-empty is-hidden" id="graphEmpty"></div>
             <div class="tooltip is-hidden" id="tooltip" role="tooltip"></div>
-            <details class="graph-legend" id="graphLegend" open>
+            <details class="encoding-legend" id="encodingLegend">
               <summary>图例</summary>
-              <div id="graphLegendContent"></div>
+              <div id="legendContent"></div>
             </details>
             <p class="interaction-hint">滚轮缩放 · 拖动空白处平移 · 拖动节点调整位置 · 点击节点继续探索</p>
           </div>
