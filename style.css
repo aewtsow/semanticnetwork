@@ -527,6 +527,11 @@ body[data-active-tab="word"] .graph-stage {
 body[data-active-tab="word"] .network-edge {
   cursor: help;
   pointer-events: stroke;
+  transition: none;
+}
+
+body[data-active-tab="word"] .network-node {
+  transition: none;
 }
 
 .network-edge.is-active {
