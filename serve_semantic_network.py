@@ -11,7 +11,7 @@ import sys
 PROJECT_DIR = Path(__file__).resolve().parent
 HOST = "127.0.0.1"
 PORT = 8765
-URL = f"http://{HOST}:{PORT}/?v=20260823-1"
+URL = f"http://{HOST}:{PORT}/?v=20260827-2"
 
 
 class NoCacheHandler(SimpleHTTPRequestHandler):

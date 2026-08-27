@@ -5,8 +5,13 @@ const nounRelations = window.CLASSIFIER_NOUN_DATA;
 const similarityRelations = window.CLASSIFIER_SIMILARITY_DATA;
 const wordNodes = window.WORD_NETWORK_NODES;
 const wordManifest = window.WORD_NETWORK_EDGE_MANIFEST;
+const GraphologyUndirectedGraph = window.graphology?.UndirectedGraph;
+const graphologyLouvain = window.graphologyLibrary?.communitiesLouvain;
+const graphologyModularity = window.graphologyLibrary?.metrics?.graph?.modularity;
 
-if (![nounRelations, similarityRelations, wordNodes].every(Array.isArray) || !wordManifest) {
+if (![nounRelations, similarityRelations, wordNodes].every(Array.isArray) || !wordManifest
+  || wordManifest.classifierNounPolicy !== "valid_common_only"
+  || !GraphologyUndirectedGraph || !graphologyLouvain || !graphologyModularity) {
   throw new Error("网页数据未正确加载，请先运行 prepare_data.py 和 prepare_word_network.py。");
 }
 
@@ -43,6 +48,7 @@ const dom = {
   wordWidthMetric: document.querySelector("#wordWidthMetric"),
   wordSizeMetric: document.querySelector("#wordSizeMetric"),
   wordRankMetric: document.querySelector("#wordRankMetric"),
+  wordCommunityMode: document.querySelector("#wordCommunityMode"),
   labelMode: document.querySelector("#labelMode"),
   graphStage: document.querySelector("#graphStage"),
   svg: document.querySelector("#networkSvg"),
@@ -67,10 +73,17 @@ const dom = {
 const classifierToNouns = new Map();
 const nounToClassifiers = new Map();
 const classifierToSimilarities = new Map();
+const validClassifierNounByPair = new Map();
 
 for (const relation of nounRelations) {
   addToIndex(classifierToNouns, relation.classifier, relation);
   addToIndex(nounToClassifiers, relation.word, relation);
+  const pairKey = unorderedWordPairKey(relation.classifier, relation.word);
+  const previous = validClassifierNounByPair.get(pairKey);
+  if (previous && (previous.classifier !== relation.classifier || previous.word !== relation.word)) {
+    throw new Error(`valid_common 中存在无法无歧义表示的双向角色：${relation.classifier}—${relation.word}`);
+  }
+  validClassifierNounByPair.set(pairKey, relation);
 }
 for (const relation of similarityRelations) {
   addToIndex(classifierToSimilarities, relation.source, {
@@ -90,6 +103,10 @@ for (const rows of classifierToSimilarities.values()) rows.sort((a, b) => b.simi
 
 const classifiers = [...classifierToNouns.keys()].sort(zhSort);
 const classifierSet = new Set(classifiers);
+const nouns = [...nounToClassifiers.keys()].sort(zhSort);
+const nounSet = new Set(nouns);
+const classifierNounSearchWords = [...new Set([...classifiers, ...nouns])].sort(zhSort);
+const classifierNounSearchSet = new Set(classifierNounSearchWords);
 const classifierNounCount = new Map([...classifierToNouns].map(([key, rows]) => [
   key, new Set(rows.map((row) => row.word)).size,
 ]));
@@ -110,10 +127,17 @@ const commonNounRange = extent(similarityRelations.map((row) => row.commonNouns)
 const WORD_CO_MAX = Number(wordManifest.coOccurrenceMax);
 const WORD_CO_SLIDER_MAX = 1000;
 const WORD_CO_CURVE = 1.6;
+const WORD_DEGREE_MAX = Number(wordManifest.topKPerNode);
+const WORD_DEGREE_SLIDER_MAX = 1000;
+const WORD_DEGREE_SLIDER_MID = WORD_DEGREE_SLIDER_MAX / 2;
+const WORD_DEGREE_KNEE = Math.min(100, WORD_DEGREE_MAX);
 const COMMUNITY_COLORS = [
   "#8f5d5d", "#58758a", "#8a7750", "#56796f", "#75698d",
   "#9a6d4a", "#607c91", "#7f6555", "#687d58", "#8b6477",
 ];
+const NEUTRAL_COMMUNITY_COLOR = "#aaa79f";
+const GLOBAL_MODULARITY = Number(wordManifest.communityGraph?.modularity);
+const WORD_RENDER_DEBOUNCE_MS = 220;
 const nounMetricSpecs = {
   score: {
     label: "NPMI_log_co_score", direction: "lte", step: 0.01,
@@ -154,6 +178,11 @@ const state = {
   wordWidthMetric: "coOccurrence",
   wordSizeMetric: "currentDegree",
   wordRankMetric: "pmi",
+  wordCommunityMode: "local",
+  wordCommunityCache: new Map(),
+  wordLocalColorState: { target: null, groups: [], nextSlot: 0 },
+  wordCommunityRunCount: 0,
+  wordRenderTimer: null,
   wordBuffersLoaded: false,
   wordBuffersPromise: null,
   layoutSeed: 0,
@@ -174,6 +203,10 @@ function addToIndex(index, key, value) {
   index.get(key).push(value);
 }
 
+function unorderedWordPairKey(first, second) {
+  return first <= second ? `${first}\u0000${second}` : `${second}\u0000${first}`;
+}
+
 function zhSort(a, b) {
   return String(a).localeCompare(String(b), "zh-CN");
 }
@@ -183,7 +216,7 @@ function extent(values) {
 }
 
 function communityColor(community) {
-  if (!Number.isInteger(community)) return "#aaa79f";
+  if (!Number.isInteger(community)) return NEUTRAL_COMMUNITY_COLOR;
   return COMMUNITY_COLORS[community % COMMUNITY_COLORS.length];
 }
 
@@ -383,8 +416,11 @@ function incidentWordRelations(nodeIndex) {
   for (let offset = 0; offset < node.count; offset += 1) {
     const byteOffset = (node.offset + offset) * wordManifest.recordBytes;
     const neighborIndex = view.getUint32(byteOffset, true);
-    const coOccurrence = view.getFloat64(byteOffset + 4, true);
+    let coOccurrence = view.getFloat64(byteOffset + 4, true);
     const neighbor = wordNodes[neighborIndex];
+    const validClassifierNoun = validClassifierNounByPair.get(
+      unorderedWordPairKey(node.id, neighbor.id),
+    );
     const sameType = node.type === neighbor.type;
     let sourceIndex;
     let targetIndex;
@@ -393,7 +429,19 @@ function incidentWordRelations(nodeIndex) {
     let total;
     let sourceFrequency;
     let targetFrequency;
-    if (sameType) {
+    let pmi;
+    let npmi;
+    let score;
+    if (validClassifierNoun) {
+      sourceIndex = wordNodeById.get(validClassifierNoun.classifier).index;
+      targetIndex = wordNodeById.get(validClassifierNoun.word).index;
+      relationType = "classifier_noun";
+      directed = true;
+      coOccurrence = validClassifierNoun.coOccurrence;
+      pmi = validClassifierNoun.pmi;
+      npmi = validClassifierNoun.npmi;
+      score = validClassifierNoun.score;
+    } else if (sameType) {
       sourceIndex = Math.min(nodeIndex, neighborIndex);
       targetIndex = Math.max(nodeIndex, neighborIndex);
       relationType = node.type === "classifier" ? "classifier_classifier" : "noun_noun";
@@ -402,17 +450,16 @@ function incidentWordRelations(nodeIndex) {
       sourceFrequency = wordNodes[sourceIndex].symFrequency;
       targetFrequency = wordNodes[targetIndex].symFrequency;
     } else {
-      sourceIndex = node.type === "classifier" ? nodeIndex : neighborIndex;
-      targetIndex = node.type === "classifier" ? neighborIndex : nodeIndex;
-      relationType = "classifier_noun";
-      directed = true;
-      total = wordManifest.total;
-      sourceFrequency = wordNodes[sourceIndex].rowSum;
-      targetFrequency = wordNodes[targetIndex].columnSum;
+      // 浏览器数据只允许 valid_common 中存在的量词—名词关系。
+      // 若旧缓存中残留普通语料跨词类边，在这里明确忽略。
+      continue;
     }
-    const pmi = Math.log(total) + Math.log(coOccurrence)
-      - Math.log(sourceFrequency) - Math.log(targetFrequency);
-    const npmi = pmi / -Math.log(coOccurrence / total);
+    if (!validClassifierNoun) {
+      pmi = Math.log(total) + Math.log(coOccurrence)
+        - Math.log(sourceFrequency) - Math.log(targetFrequency);
+      npmi = pmi / -Math.log(coOccurrence / total);
+      score = npmi * Math.log(coOccurrence);
+    }
     rows.push({
       key: `${Math.min(nodeIndex, neighborIndex)}|${Math.max(nodeIndex, neighborIndex)}`,
       nodeIndex, neighborIndex, neighbor: neighbor.id,
@@ -420,7 +467,7 @@ function incidentWordRelations(nodeIndex) {
       sourceWord: wordNodes[sourceIndex].id,
       targetWord: wordNodes[targetIndex].id,
       relationType, directed,
-      coOccurrence, pmi, npmi, score: npmi * Math.log(coOccurrence),
+      coOccurrence, pmi, npmi, score,
     });
   }
   return rows;
@@ -435,25 +482,6 @@ function weakDegree(nodeIndices, edges) {
   return new Map([...neighbors].map(([index, rows]) => [index, rows.size]));
 }
 
-function weakComponent(targetIndex, allowedNodes, edges) {
-  const adjacency = new Map([...allowedNodes].map((index) => [index, []]));
-  for (const edge of edges) {
-    if (!allowedNodes.has(edge.sourceIndex) || !allowedNodes.has(edge.targetIndex)) continue;
-    adjacency.get(edge.sourceIndex).push(edge.targetIndex);
-    adjacency.get(edge.targetIndex).push(edge.sourceIndex);
-  }
-  const visited = new Set([targetIndex]);
-  const queue = [targetIndex];
-  while (queue.length) {
-    const current = queue.shift();
-    for (const next of adjacency.get(current) || []) {
-      if (visited.has(next)) continue;
-      visited.add(next); queue.push(next);
-    }
-  }
-  return visited;
-}
-
 function wordNodeSizeValue(index, currentDegree, directCo) {
   const node = wordNodes[index];
   if (state.wordSizeMetric === "currentDegree") return currentDegree.get(index) || 0;
@@ -462,9 +490,227 @@ function wordNodeSizeValue(index, currentDegree, directCo) {
   return Number(node[state.wordSizeMetric]);
 }
 
+function wordCommunityCacheKey() {
+  return [
+    state.wordTarget,
+    state.wordPmiThreshold,
+    state.wordCoThreshold,
+    state.wordDegreeThreshold,
+  ].join("|");
+}
+
+function seededRandom(seedText) {
+  let seed = 2166136261;
+  for (let index = 0; index < seedText.length; index += 1) {
+    seed ^= seedText.charCodeAt(index);
+    seed = Math.imul(seed, 16777619);
+  }
+  return () => {
+    seed += 0x6D2B79F5;
+    let value = seed;
+    value = Math.imul(value ^ value >>> 15, value | 1);
+    value ^= value + Math.imul(value ^ value >>> 7, value | 61);
+    return ((value ^ value >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function partitionGroups(partition) {
+  const groups = new Map();
+  for (const [nodeIndex, community] of partition) {
+    if (!groups.has(community)) groups.set(community, new Set());
+    groups.get(community).add(nodeIndex);
+  }
+  return groups;
+}
+
+function jaccardSimilarity(first, second) {
+  let intersection = 0;
+  const smaller = first.size <= second.size ? first : second;
+  const larger = smaller === first ? second : first;
+  for (const member of smaller) if (larger.has(member)) intersection += 1;
+  return intersection / (first.size + second.size - intersection);
+}
+
+function stableLocalCommunityColors(partition) {
+  if (state.wordLocalColorState.target !== state.wordTarget) {
+    state.wordLocalColorState = { target: state.wordTarget, groups: [], nextSlot: 0 };
+  }
+  const currentGroups = [...partitionGroups(partition)].map(([community, members]) => ({
+    community, members, colorSlot: null,
+  }));
+  const candidates = [];
+  state.wordLocalColorState.groups.forEach((previous, previousIndex) => {
+    currentGroups.forEach((current, currentIndex) => {
+      const similarity = jaccardSimilarity(previous.members, current.members);
+      if (similarity >= 0.2) candidates.push({ previousIndex, currentIndex, similarity });
+    });
+  });
+  candidates.sort((a, b) => b.similarity - a.similarity);
+  const matchedPrevious = new Set();
+  const matchedCurrent = new Set();
+  for (const candidate of candidates) {
+    if (matchedPrevious.has(candidate.previousIndex) || matchedCurrent.has(candidate.currentIndex)) continue;
+    currentGroups[candidate.currentIndex].colorSlot = state.wordLocalColorState.groups[candidate.previousIndex].colorSlot;
+    matchedPrevious.add(candidate.previousIndex);
+    matchedCurrent.add(candidate.currentIndex);
+  }
+  const usedSlots = new Set(currentGroups.map((group) => group.colorSlot).filter(Number.isInteger));
+  let nextSlot = state.wordLocalColorState.nextSlot;
+  for (const group of currentGroups.sort((a, b) => b.members.size - a.members.size)) {
+    if (Number.isInteger(group.colorSlot)) continue;
+    let attempts = 0;
+    while (usedSlots.has(nextSlot % COMMUNITY_COLORS.length) && attempts < COMMUNITY_COLORS.length) {
+      nextSlot += 1;
+      attempts += 1;
+    }
+    group.colorSlot = nextSlot % COMMUNITY_COLORS.length;
+    usedSlots.add(group.colorSlot);
+    nextSlot += 1;
+  }
+  state.wordLocalColorState = {
+    target: state.wordTarget,
+    groups: currentGroups.map((group) => ({ members: group.members, colorSlot: group.colorSlot })),
+    nextSlot,
+  };
+  return new Map(currentGroups.map((group) => [group.community, group.colorSlot]));
+}
+
+function computeLocalCommunity(component, componentEdges) {
+  const cacheKey = wordCommunityCacheKey();
+  let result = state.wordCommunityCache.get(cacheKey);
+  let cacheHit = true;
+  if (!result) {
+    cacheHit = false;
+    const positiveEdges = componentEdges.filter((edge) => edge.pmi > 0);
+    if (component.size < 2 || positiveEdges.length === 0) {
+      result = {
+        available: false, partition: new Map(), communityCount: null, modularity: null,
+        globalProjectedModularity: null, positiveEdgeCount: positiveEdges.length,
+        computationMs: 0,
+      };
+    } else {
+      const started = performance.now();
+      const graph = new GraphologyUndirectedGraph({ allowSelfLoops: false, multi: false });
+      let allGlobalCommunitiesAvailable = true;
+      for (const nodeIndex of component) {
+        const globalCommunity = wordNodes[nodeIndex].community;
+        if (!Number.isInteger(globalCommunity)) allGlobalCommunitiesAvailable = false;
+        graph.addNode(String(nodeIndex), {
+          globalCommunity: Number.isInteger(globalCommunity) ? globalCommunity : `unassigned:${nodeIndex}`,
+        });
+      }
+      for (const edge of positiveEdges) {
+        graph.addUndirectedEdgeWithKey(edge.key, String(edge.sourceIndex), String(edge.targetIndex), {
+          weight: edge.pmi,
+        });
+      }
+      const details = graphologyLouvain.detailed(graph, {
+        getEdgeWeight: "weight",
+        randomWalk: true,
+        rng: seededRandom(cacheKey),
+      });
+      const partition = new Map(Object.entries(details.communities).map(
+        ([nodeIndex, community]) => [Number(nodeIndex), community],
+      ));
+      result = {
+        available: true,
+        partition,
+        communityCount: details.count,
+        modularity: details.modularity,
+        globalProjectedModularity: allGlobalCommunitiesAvailable
+          ? graphologyModularity(graph, {
+            getNodeCommunity: "globalCommunity",
+            getEdgeWeight: "weight",
+          })
+          : null,
+        positiveEdgeCount: positiveEdges.length,
+        computationMs: performance.now() - started,
+      };
+      state.wordCommunityRunCount += 1;
+    }
+    state.wordCommunityCache.set(cacheKey, result);
+  }
+  return {
+    ...result,
+    cacheHit,
+    colorSlots: result.available ? stableLocalCommunityColors(result.partition) : new Map(),
+  };
+}
+
+function displayCommunity(community, unavailableText = "未纳入固定分析图") {
+  return Number.isInteger(community) ? community : unavailableText;
+}
+
+function wordNodeTooltip(node) {
+  const communityRows = state.wordCommunityMode === "local"
+    ? [
+      `Local Community：${displayCommunity(node.localCommunity, "不可计算")}`,
+      `Global Community：${displayCommunity(node.globalCommunity)}`,
+    ]
+    : [
+      `Global Community：${displayCommunity(node.globalCommunity)}`,
+      `Local Community：${displayCommunity(node.localCommunity, "不可计算")}`,
+    ];
+  return [
+    `词类：${node.type === "classifier" ? node.alsoNoun ? "量词（亦作名词）" : "量词" : "名词"}`,
+    ...communityRows,
+    `Current Degree：${node.currentDegree}`,
+    `Full Degree：${node.fullCount.toLocaleString()}`,
+    `与当前目标直接共现：${node.directCo.toLocaleString()}`,
+  ].join("<br>");
+}
+
+function applyWordCommunityMode(graph) {
+  if (state.activeTab !== "word") return;
+  for (const node of graph.nodes) {
+    if (state.wordCommunityMode === "local") {
+      node.community = node.localCommunity;
+      node.color = Number.isInteger(node.localColorSlot)
+        ? communityColor(node.localColorSlot) : NEUTRAL_COMMUNITY_COLOR;
+    } else {
+      node.community = node.globalCommunity;
+      node.color = communityColor(node.globalCommunity);
+    }
+    node.tooltip = wordNodeTooltip(node);
+  }
+}
+
+function refreshWordCommunityPresentation() {
+  if (state.activeTab !== "word" || !state.currentGraph.currentDegree) return;
+  applyWordCommunityMode(state.currentGraph);
+  document.body.dataset.wordCommunityMode = state.wordCommunityMode;
+  const nodeById = new Map(state.currentGraph.nodes.map((node) => [node.id, node]));
+  for (const element of dom.nodeLayer.children) {
+    const node = nodeById.get(element.dataset.nodeId);
+    if (!node) continue;
+    element.dataset.community = node.community ?? "";
+    element.dataset.localCommunity = node.localCommunity ?? "";
+    element.dataset.globalCommunity = node.globalCommunity ?? "";
+    const shape = element.querySelector(".node-circle");
+    if (shape) shape.style.fill = node.color;
+  }
+  renderWordInformation(state.currentGraph);
+  updateNetworkStats(state.currentGraph);
+  updateLegend();
+}
+
+function targetRelationIsAllowed(targetIndex, edge) {
+  const target = wordNodes[targetIndex];
+  if (target.type === "classifier") {
+    return edge.relationType === "classifier_classifier"
+      || (edge.relationType === "classifier_noun" && edge.sourceIndex === targetIndex);
+  }
+  return edge.relationType === "noun_noun"
+    || (edge.relationType === "classifier_noun" && edge.targetIndex === targetIndex);
+}
+
 function buildWordGraph() {
   const targetIndex = wordNodeById.get(state.wordTarget).index;
-  const targetRelations = incidentWordRelations(targetIndex);
+  const targetRelations = incidentWordRelations(targetIndex).filter(
+    (edge) => targetRelationIsAllowed(targetIndex, edge)
+      && edge.pmi >= state.wordPmiThreshold
+      && edge.coOccurrence >= state.wordCoThreshold,
+  );
   const candidateIndices = new Set([targetIndex, ...targetRelations.map((row) => row.neighborIndex)]);
   const filteredEdgeByKey = new Map();
   for (const nodeIndex of candidateIndices) {
@@ -475,43 +721,64 @@ function buildWordGraph() {
     }
   }
   const filteredEdges = [...filteredEdgeByKey.values()];
-  const currentDegree = weakDegree(candidateIndices, filteredEdges);
-  const degreeQualified = new Set([...candidateIndices].filter(
-    (index) => (currentDegree.get(index) || 0) >= state.wordDegreeThreshold,
-  ));
-  const targetPruned = !degreeQualified.has(targetIndex);
-  const component = targetPruned ? new Set([targetIndex])
-    : weakComponent(targetIndex, degreeQualified, filteredEdges);
-  const componentEdges = targetPruned ? [] : filteredEdges.filter(
-    (edge) => component.has(edge.sourceIndex) && component.has(edge.targetIndex),
+  const prePruneDegree = weakDegree(candidateIndices, filteredEdges);
+  const visibleIndices = new Set([targetIndex]);
+  for (const nodeIndex of candidateIndices) {
+    if (nodeIndex !== targetIndex && (prePruneDegree.get(nodeIndex) || 0) >= state.wordDegreeThreshold) {
+      visibleIndices.add(nodeIndex);
+    }
+  }
+  let visibleEdges = filteredEdges.filter(
+    (edge) => visibleIndices.has(edge.sourceIndex) && visibleIndices.has(edge.targetIndex),
   );
+  const classifiersWithVisibleNoun = new Set();
+  const overlapNodesServingAsNouns = new Set();
+  for (const edge of visibleEdges) {
+    if (edge.relationType !== "classifier_noun") continue;
+    classifiersWithVisibleNoun.add(edge.sourceIndex);
+    if (wordNodes[edge.targetIndex].alsoNoun) overlapNodesServingAsNouns.add(edge.targetIndex);
+  }
+  const removedUnpairedClassifiers = [];
+  for (const nodeIndex of [...visibleIndices]) {
+    if (nodeIndex === targetIndex || wordNodes[nodeIndex].type !== "classifier") continue;
+    if (classifiersWithVisibleNoun.has(nodeIndex) || overlapNodesServingAsNouns.has(nodeIndex)) continue;
+    visibleIndices.delete(nodeIndex);
+    removedUnpairedClassifiers.push(nodeIndex);
+  }
+  visibleEdges = visibleEdges.filter(
+    (edge) => visibleIndices.has(edge.sourceIndex) && visibleIndices.has(edge.targetIndex),
+  );
+  const currentDegree = weakDegree(visibleIndices, visibleEdges);
+  const visibleTargetRelations = targetRelations.filter((edge) => visibleIndices.has(edge.neighborIndex));
+  const centerValidNounCount = visibleTargetRelations.filter(
+    (edge) => edge.relationType === "classifier_noun" && edge.sourceIndex === targetIndex,
+  ).length;
+  const localCommunity = computeLocalCommunity(visibleIndices, visibleEdges);
   const directCo = new Map(targetRelations.map((row) => [row.neighborIndex, row.coOccurrence]));
-  const rawSizes = [...component].map((index) => wordNodeSizeValue(index, currentDegree, directCo));
+  const rawSizes = [...visibleIndices].map((index) => wordNodeSizeValue(index, currentDegree, directCo));
   const sizeRange = extent(rawSizes.map((value) => Number.isFinite(value) ? value : 0));
   const metricRange = {};
   for (const metric of ["pmi", "coOccurrence", "npmi", "score"]) {
-    metricRange[metric] = componentEdges.length ? extent(componentEdges.map((edge) => edge[metric])) : [0, 1];
+    metricRange[metric] = visibleEdges.length ? extent(visibleEdges.map((edge) => edge[metric])) : [0, 1];
   }
-  const nodes = [...component].map((index) => {
+  const nodes = [...visibleIndices].map((index) => {
     const source = wordNodes[index];
     const center = index === targetIndex;
     const rawSize = wordNodeSizeValue(index, currentDegree, directCo);
     return {
       id: `w:${index}`, wordIndex: index, label: source.id, type: source.type,
+      alsoNoun: source.alsoNoun,
       shape: source.type === "classifier" ? "triangle" : "circle", center,
       size: center ? 24 : scaleSqrt(Number.isFinite(rawSize) ? rawSize : 0, sizeRange, 7, 21),
       fullCount: source.degreeFull, currentDegree: currentDegree.get(index) || 0,
-      community: source.community, color: communityColor(source.community), directCo: directCo.get(index) || 0,
-      tooltip: [
-        `词类：${source.type === "classifier" ? source.alsoNoun ? "量词（亦作名词）" : "量词" : "名词"}`,
-        `Community：${Number.isInteger(source.community) ? source.community : "未纳入固定分析图"}`,
-        `Current Degree：${currentDegree.get(index) || 0}`,
-        `Full Degree：${source.degreeFull.toLocaleString()}`,
-        `与当前目标直接共现：${(directCo.get(index) || 0).toLocaleString()}`,
-      ].join("<br>"),
+      prePruneDegree: prePruneDegree.get(index) || 0,
+      globalCommunity: source.community,
+      localCommunity: localCommunity.partition.get(index) ?? null,
+      localColorSlot: localCommunity.colorSlots.get(localCommunity.partition.get(index)) ?? null,
+      directCo: directCo.get(index) || 0,
     };
   });
-  const edges = componentEdges.map((edge, index) => ({
+  const edges = visibleEdges.map((edge, index) => ({
     ...edge,
     id: `w:${edge.key}:${index}`,
     source: `w:${edge.sourceIndex}`, target: `w:${edge.targetIndex}`,
@@ -524,12 +791,30 @@ function buildWordGraph() {
     ),
     metric: state.wordWidthMetric, value: edge[state.wordWidthMetric],
   }));
-  return {
+  const graph = {
     nodes, edges, visibleCount: Math.max(0, nodes.length - 1),
-    qualifiedCount: degreeQualified.size, candidateCount: candidateIndices.size,
-    filteredEdgeCount: filteredEdges.length, targetPruned, currentDegree,
-    targetRelations, componentNodeCount: nodes.length, componentEdgeCount: edges.length,
+    qualifiedCount: Math.max(0, visibleIndices.size - 1), candidateCount: candidateIndices.size,
+    filteredEdgeCount: filteredEdges.length, currentDegree, prePruneDegree,
+    targetRelations: visibleTargetRelations,
+    directNeighborCount: targetRelations.length,
+    finalDirectNeighborCount: visibleTargetRelations.length,
+    centerValidNounCount,
+    removedUnpairedClassifierCount: removedUnpairedClassifiers.length,
+    validClassifierNounEdgeCount: visibleEdges.filter(
+      (edge) => edge.relationType === "classifier_noun",
+    ).length,
+    centerPrePruneDegree: prePruneDegree.get(targetIndex) || 0,
+    componentNodeCount: nodes.length, componentEdgeCount: edges.length,
+    localCommunityAvailable: localCommunity.available,
+    localCommunityCount: localCommunity.communityCount,
+    localModularity: localCommunity.modularity,
+    globalProjectedModularity: localCommunity.globalProjectedModularity,
+    localPositiveEdgeCount: localCommunity.positiveEdgeCount,
+    localCommunityMs: localCommunity.computationMs,
+    localCommunityCacheHit: localCommunity.cacheHit,
   };
+  applyWordCommunityMode(graph);
+  return graph;
 }
 
 function assignRadialPositions(graph) {
@@ -719,6 +1004,11 @@ function resetWordLayout() {
 }
 
 async function renderNetwork() {
+  if (state.wordRenderTimer) {
+    clearTimeout(state.wordRenderTimer);
+    state.wordRenderTimer = null;
+  }
+  const renderStarted = performance.now();
   stopWordSimulation();
   const token = ++state.renderToken;
   state.view = { x: 0, y: 0, scale: 1 };
@@ -756,6 +1046,15 @@ async function renderNetwork() {
   if (state.activeTab === "word") startWordSimulation(graph);
   updateGraphHeading();
   renderInformation(graph);
+  graph.totalUpdateMs = performance.now() - renderStarted;
+  if (state.activeTab === "word") {
+    document.body.dataset.wordCommunityMode = state.wordCommunityMode;
+    document.body.dataset.localCommunityRuns = String(state.wordCommunityRunCount);
+    document.body.dataset.localCommunityMs = String(graph.localCommunityMs);
+    document.body.dataset.totalGraphUpdateMs = String(graph.totalUpdateMs);
+    document.body.dataset.wordDirectNeighbors = String(graph.directNeighborCount);
+    document.body.dataset.wordFinalNeighbors = String(graph.finalDirectNeighborCount);
+  }
   updateNetworkStats(graph);
   updateLegend();
 }
@@ -792,6 +1091,10 @@ function drawGraph(graph) {
       class: `network-node ${node.type}${node.center ? " center" : ""}`,
       "data-node-id": node.id, "data-label": node.label, "data-node-type": node.type,
       "data-full-count": node.fullCount ?? "", "data-community": node.community ?? "",
+      "data-current-degree": node.currentDegree ?? "",
+      "data-pre-prune-degree": node.prePruneDegree ?? "",
+      "data-local-community": node.localCommunity ?? "",
+      "data-global-community": node.globalCommunity ?? "",
       transform: `translate(${node.x} ${node.y})`,
       tabindex: "0", role: "button", "aria-label": `${node.label}${node.center ? "，当前中心节点" : ""}`,
     });
@@ -810,9 +1113,7 @@ function drawGraph(graph) {
   const empty = graph.visibleCount === 0;
   dom.graphEmpty.classList.toggle("is-hidden", !empty);
   dom.graphEmpty.textContent = empty
-    ? graph.targetPruned
-      ? "当前 Degree 阈值下，该词已被修剪。请降低 Degree threshold。"
-      : "当前阈值下没有可显示的邻居。中心节点仍然保留；请调整阈值继续探索。"
+    ? "当前阈值下没有可显示的邻居。中心节点仍然保留；请调整阈值继续探索。"
     : "";
   updateLabels(); updateViewportTransform();
 }
@@ -890,7 +1191,7 @@ function activateNode(node) {
   if (node.center) return;
   if (state.activeTab === "classifier") { selectClassifier(node.label); return; }
   if (state.activeTab === "noun") {
-    if (node.type === "noun") { state.nounCenter = node.label; void renderNetwork(); }
+    if (node.type === "noun") selectNoun(node.label);
     else selectClassifier(node.label);
     return;
   }
@@ -900,6 +1201,12 @@ function activateNode(node) {
 function selectClassifier(classifier) {
   state.currentClassifier = classifier; state.nounCenter = null; state.wordTarget = classifier;
   dom.classifierSearch.value = classifier; dom.searchMessage.textContent = "";
+  void renderNetwork();
+}
+
+function selectNoun(noun) {
+  state.nounCenter = noun; state.wordTarget = noun;
+  dom.classifierSearch.value = noun; dom.searchMessage.textContent = "";
   void renderNetwork();
 }
 
@@ -1053,8 +1360,8 @@ function updateGraphHeading() {
     dom.graphTitle.textContent = state.nounCenter
       ? `${state.nounCenter} 的量词搭配` : `${state.currentClassifier} 的名词搭配`;
   } else {
-    dom.graphModeLabel.textContent = "混合词类关系网络 · 弱连通分量";
-    dom.graphTitle.textContent = `${state.wordTarget} 的 Top 400 词汇网络`;
+    dom.graphModeLabel.textContent = "混合词类关系网络 · 1-hop 诱导子图";
+    dom.graphTitle.textContent = `${state.wordTarget} 的合理关系 Top 400 直接邻域`;
   }
 }
 
@@ -1074,9 +1381,17 @@ function updateNetworkStats(graph) {
     ];
   } else {
     rows = [
-      ["当前目标", state.wordTarget], ["候选词", graph.candidateCount.toLocaleString()],
-      ["当前分量节点", graph.componentNodeCount.toLocaleString()],
-      ["当前分量关系", graph.componentEdgeCount.toLocaleString()],
+      ["当前目标", state.wordTarget],
+      ["有效直接邻居", graph.directNeighborCount.toLocaleString()],
+      ["最终节点", graph.componentNodeCount.toLocaleString()],
+      ["最终关系", graph.componentEdgeCount.toLocaleString()],
+      ["合理量词—名词关系", graph.validClassifierNounEdgeCount.toLocaleString()],
+      ["Local Communities", graph.localCommunityAvailable
+        ? graph.localCommunityCount.toLocaleString() : "不可计算"],
+      ["Local Modularity", graph.localCommunityAvailable
+        ? formatNumber(graph.localModularity, 3) : "不可计算"],
+      ["Global Modularity", Number.isFinite(GLOBAL_MODULARITY)
+        ? formatNumber(GLOBAL_MODULARITY, 3) : "未计算"],
     ];
   }
   dom.networkStats.replaceChildren(...rows.map(([label, value]) => {
@@ -1099,9 +1414,14 @@ function updateLegend() {
       `边宽与深浅 = ${nounMetricSpecs[state.nounMetric].label}`,
     ].map((text) => `<p>${text}</p>`).join("");
   } else {
+    const communityDescription = state.wordCommunityMode === "local"
+      ? "颜色 = 当前可见图的局部 Louvain Community"
+      : "颜色 = 完整词汇网络的全局固定 Louvain Community";
     dom.legendContent.innerHTML = [
-      "▲ = 量词；● = 名词；颜色 = 固定 Louvain community",
-      "量词 → 名词：使用 classifier→noun 原始 row→column 指标",
+      `▲ = 量词；● = 名词；${communityDescription}`,
+      `当前网络 = 先限定合法关系，再取 TARGET 的 Top ${wordManifest.topKPerNode} 直接邻居诱导子图`,
+      "局部 Community 仅使用当前可见网络中的正 PMI 边，权重 = PMI",
+      "量词 → 名词：仅使用 valid_common 中的合理搭配及原始 row→column 指标",
       "名词 ↔ 名词：双向共现平均后重新计算指标",
       "量词 ↔ 量词：双向共现平均后重新计算指标",
       "画布连线不显示箭头；关系方向与类型可在边 Tooltip 中核查",
@@ -1170,19 +1490,41 @@ function renderNounInformation(graph) {
 
 function renderWordInformation(graph) {
   const node = wordNodeById.get(state.wordTarget);
+  const visibleNode = graph.nodes.find((item) => item.center);
   const currentDegree = graph.currentDegree.get(node.index) || 0;
+  const localRow = `<span>Local Community：${displayCommunity(visibleNode?.localCommunity, "不可计算")}</span>`;
+  const globalRow = `<span>Global Community：${displayCommunity(node.community)}</span>`;
+  const communityRows = state.wordCommunityMode === "local"
+    ? [localRow, globalRow] : [globalRow, localRow];
   dom.infoTitle.textContent = state.wordTarget;
   dom.primaryMetric.innerHTML = [
     `<span>词类：${node.type === "classifier" ? node.alsoNoun ? "量词（亦作名词）" : "量词" : "名词"}</span>`,
-    `<span>Community：${Number.isInteger(node.community) ? node.community : "未纳入固定分析图"}</span>`,
+    ...communityRows,
     `<strong>Current Degree：${currentDegree.toLocaleString()}</strong>`,
     `<span>Full Degree：${node.degreeFull.toLocaleString()}</span>`,
   ].join("");
-  if (graph.targetPruned) {
-    dom.thresholdNote.textContent = "当前 Degree 阈值下，该词已被修剪。请降低 Degree threshold。";
-    dom.thresholdNote.classList.remove("is-hidden");
+  const notes = [];
+  if (graph.centerPrePruneDegree < state.wordDegreeThreshold) {
+    notes.push(`中心词修剪前 Degree 为 ${graph.centerPrePruneDegree}，低于当前阈值，但中心词按规则保留。`);
+  }
+  if (graph.finalDirectNeighborCount <= 1) {
+    notes.push(graph.finalDirectNeighborCount === 1
+      ? "当前阈值下中心词仅保留 1 个有效邻居。"
+      : "当前阈值下中心词没有保留有效邻居。");
+  }
+  if (node.type === "classifier" && graph.centerValidNounCount === 0) {
+    notes.push("当前条件下中心量词没有保留 valid_common 中的合理名词搭配；中心词仍按规则显示。");
+  }
+  if (graph.removedUnpairedClassifierCount > 0) {
+    notes.push(`已删除 ${graph.removedUnpairedClassifierCount} 个未连接任何可见名词的非中心量词。`);
+  }
+  if (!graph.localCommunityAvailable) {
+    notes.push("当前过滤条件下没有可用于 Community 计算的正 PMI 边。");
   } else if (graph.componentNodeCount > 350 || graph.componentEdgeCount > 5000) {
-    dom.thresholdNote.textContent = "当前连通分量较大，交互可能变慢；可提高 PMI、共现或 Degree 阈值。";
+    notes.push("当前 1-hop 诱导子图较大，交互可能变慢；可提高 PMI、共现或 Degree 阈值。");
+  }
+  if (notes.length) {
+    dom.thresholdNote.textContent = notes.join(" ");
     dom.thresholdNote.classList.remove("is-hidden");
   }
   const strongest = [...graph.targetRelations]
@@ -1230,8 +1572,17 @@ function wordFilterSummary(graph) {
     `PMI ≥ ${formatNumber(state.wordPmiThreshold, 2)}`,
     `Co-occurrence ≥ ${state.wordCoThreshold.toLocaleString()}`,
     `Degree ≥ ${state.wordDegreeThreshold}`,
-    `当前弱连通分量：${graph.componentNodeCount.toLocaleString()} nodes / ${graph.componentEdgeCount.toLocaleString()} relations`,
-    `显示候选：按完整数据 NPMI_log_co_score 排名前 ${wordManifest.topKPerNode}`,
+    `TARGET 有效直接邻居：${graph.directNeighborCount.toLocaleString()}；Degree 修剪后保留：${graph.finalDirectNeighborCount.toLocaleString()}`,
+    `当前 1-hop 诱导子图：${graph.componentNodeCount.toLocaleString()} nodes / ${graph.componentEdgeCount.toLocaleString()} relations`,
+    `合理量词—名词关系：${graph.validClassifierNounEdgeCount.toLocaleString()}；无名词连接而删除的量词：${graph.removedUnpairedClassifierCount.toLocaleString()}`,
+    `Local Louvain：${graph.localCommunityAvailable
+      ? `${graph.localCommunityCount} communities / modularity ${formatNumber(graph.localModularity, 4)}`
+      : "不可计算"}`,
+    `当前图上的 Global assignment modularity：${formatNumber(graph.globalProjectedModularity, 4)}`,
+    `Global Modularity（完整固定图）：${formatNumber(GLOBAL_MODULARITY, 4)}`,
+    `Local Community 使用 ${graph.localPositiveEdgeCount.toLocaleString()} 条正 PMI 边，weight = PMI`,
+    `Local Louvain 用时：${formatNumber(graph.localCommunityMs, 2)} ms${graph.localCommunityCacheHit ? "（cache 命中，未重算）" : ""}`,
+    `每个词的浏览器候选：先限定合法关系，再按 NPMI_log_co_score 排名前 ${wordManifest.topKPerNode}`,
   ].map((text) => `<p>${text}</p>`).join("");
   return element;
 }
@@ -1295,14 +1646,49 @@ function wordSizeDisplayName(metric) {
 }
 
 function updateSearchOptions() {
-  const values = state.activeTab === "word" ? wordNodes.map((node) => node.id) : classifiers;
+  const values = state.activeTab === "word"
+    ? wordNodes.map((node) => node.id)
+    : state.activeTab === "noun" ? classifierNounSearchWords : classifiers;
   const fragment = document.createDocumentFragment();
   for (const value of values) {
     const option = document.createElement("option"); option.value = value; fragment.append(option);
   }
   dom.classifierOptions.replaceChildren(fragment);
-  dom.searchLabel.textContent = state.activeTab === "word" ? "搜索量词或名词" : "搜索量词";
-  dom.classifierSearch.placeholder = state.activeTab === "word" ? "例如：树 或 一棵" : "例如：一棵";
+  const searchesWords = state.activeTab === "word" || state.activeTab === "noun";
+  dom.searchLabel.textContent = searchesWords ? "搜索量词或名词" : "搜索量词";
+  dom.classifierSearch.placeholder = searchesWords ? "例如：树 或 一棵" : "例如：一棵";
+}
+
+function degreeThresholdFromSlider(position) {
+  const x = clamp(Number(position), 0, WORD_DEGREE_SLIDER_MAX);
+  if (WORD_DEGREE_MAX <= WORD_DEGREE_KNEE) {
+    return Math.round(1 + x / WORD_DEGREE_SLIDER_MAX * (WORD_DEGREE_MAX - 1));
+  }
+  if (x <= WORD_DEGREE_SLIDER_MID) {
+    return Math.round(1 + x / WORD_DEGREE_SLIDER_MID * (WORD_DEGREE_KNEE - 1));
+  }
+  const ratio = (x - WORD_DEGREE_SLIDER_MID) / WORD_DEGREE_SLIDER_MID;
+  return Math.round(WORD_DEGREE_KNEE * Math.pow(WORD_DEGREE_MAX / WORD_DEGREE_KNEE, ratio));
+}
+
+function degreeSliderFromThreshold(threshold) {
+  const value = clamp(Number(threshold), 1, WORD_DEGREE_MAX);
+  if (WORD_DEGREE_MAX <= WORD_DEGREE_KNEE) {
+    return Math.round((value - 1) / Math.max(1, WORD_DEGREE_MAX - 1) * WORD_DEGREE_SLIDER_MAX);
+  }
+  if (value <= WORD_DEGREE_KNEE) {
+    return Math.round((value - 1) / (WORD_DEGREE_KNEE - 1) * WORD_DEGREE_SLIDER_MID);
+  }
+  return Math.round(
+    WORD_DEGREE_SLIDER_MID
+      + Math.log(value / WORD_DEGREE_KNEE) / Math.log(WORD_DEGREE_MAX / WORD_DEGREE_KNEE)
+        * WORD_DEGREE_SLIDER_MID,
+  );
+}
+
+function syncDegreeControl() {
+  dom.wordDegreeSlider.value = String(degreeSliderFromThreshold(state.wordDegreeThreshold));
+  dom.wordDegreeNumber.value = String(state.wordDegreeThreshold);
 }
 
 function configureNounMetric() {
@@ -1339,9 +1725,10 @@ function configureControls() {
   dom.wordPmiSlider.value = String(state.wordPmiThreshold); dom.wordPmiNumber.value = String(state.wordPmiThreshold);
   dom.wordCoNumber.max = String(WORD_CO_MAX);
   syncCoOccurrenceControl();
-  dom.wordDegreeSlider.max = String(wordManifest.topKPerNode);
-  dom.wordDegreeNumber.max = String(wordManifest.topKPerNode);
-  dom.wordDegreeSlider.value = String(state.wordDegreeThreshold); dom.wordDegreeNumber.value = String(state.wordDegreeThreshold);
+  dom.wordDegreeSlider.max = String(WORD_DEGREE_SLIDER_MAX);
+  dom.wordDegreeNumber.max = String(WORD_DEGREE_MAX);
+  syncDegreeControl();
+  dom.wordCommunityMode.value = state.wordCommunityMode;
   const unavailable = ["betweenness", "closeness"];
   for (const option of dom.wordSizeMetric.options) {
     if (unavailable.includes(option.value)) option.disabled = true;
@@ -1349,7 +1736,17 @@ function configureControls() {
 }
 
 function switchTab(tabName) {
-  state.activeTab = tabName; state.nounCenter = null;
+  state.activeTab = tabName;
+  if (tabName === "classifier") {
+    state.nounCenter = null;
+  } else if (tabName === "noun") {
+    if (classifierSet.has(state.wordTarget)) {
+      state.currentClassifier = state.wordTarget;
+      state.nounCenter = null;
+    } else if (nounSet.has(state.wordTarget)) {
+      state.nounCenter = state.wordTarget;
+    }
+  }
   for (const tab of dom.tabs) {
     const active = tab.dataset.tab === tabName;
     tab.classList.toggle("is-active", active); tab.setAttribute("aria-selected", String(active));
@@ -1361,7 +1758,8 @@ function switchTab(tabName) {
   dom.topNControl.classList.toggle("is-hidden", !nounMode);
   dom.wordControls.classList.toggle("is-hidden", !wordMode);
   dom.nounLegend.classList.toggle("is-hidden", classifierMode);
-  dom.classifierSearch.value = wordMode ? state.wordTarget : state.currentClassifier;
+  dom.classifierSearch.value = wordMode
+    ? state.wordTarget : nounMode ? state.nounCenter || state.currentClassifier : state.currentClassifier;
   updateSearchOptions(); void renderNetwork();
 }
 
@@ -1376,20 +1774,44 @@ function syncInputs(range, number, callback) {
   number.addEventListener("change", updateFromNumber);
 }
 
+function scheduleWordNetworkRender() {
+  if (state.wordRenderTimer) clearTimeout(state.wordRenderTimer);
+  state.wordRenderTimer = setTimeout(() => {
+    state.wordRenderTimer = null;
+    void renderNetwork();
+  }, WORD_RENDER_DEBOUNCE_MS);
+}
+
 function bindCoOccurrenceInputs() {
   dom.wordCoSlider.addEventListener("input", () => {
     state.wordCoThreshold = coThresholdFromSlider(dom.wordCoSlider.value);
     syncCoOccurrenceControl();
-    void renderNetwork();
+    scheduleWordNetworkRender();
   });
   const updateFromNumber = () => {
     if (dom.wordCoNumber.value === "" || !Number.isFinite(Number(dom.wordCoNumber.value))) return;
     state.wordCoThreshold = Math.round(clamp(Number(dom.wordCoNumber.value), 1, WORD_CO_MAX));
     syncCoOccurrenceControl();
-    void renderNetwork();
+    scheduleWordNetworkRender();
   };
   dom.wordCoNumber.addEventListener("input", updateFromNumber);
   dom.wordCoNumber.addEventListener("change", updateFromNumber);
+}
+
+function bindDegreeInputs() {
+  dom.wordDegreeSlider.addEventListener("input", () => {
+    state.wordDegreeThreshold = degreeThresholdFromSlider(dom.wordDegreeSlider.value);
+    syncDegreeControl();
+    scheduleWordNetworkRender();
+  });
+  const updateFromNumber = () => {
+    if (dom.wordDegreeNumber.value === "" || !Number.isFinite(Number(dom.wordDegreeNumber.value))) return;
+    state.wordDegreeThreshold = Math.round(clamp(Number(dom.wordDegreeNumber.value), 1, WORD_DEGREE_MAX));
+    syncDegreeControl();
+    scheduleWordNetworkRender();
+  };
+  dom.wordDegreeNumber.addEventListener("input", updateFromNumber);
+  dom.wordDegreeNumber.addEventListener("change", updateFromNumber);
 }
 
 function bindControls() {
@@ -1397,13 +1819,23 @@ function bindControls() {
   dom.searchForm.addEventListener("submit", (event) => {
     event.preventDefault();
     const value = dom.classifierSearch.value.trim();
-    const available = state.activeTab === "word" ? wordSet : classifierSet;
+    const available = state.activeTab === "word"
+      ? wordSet : state.activeTab === "noun" ? classifierNounSearchSet : classifierSet;
     if (!available.has(value)) {
-      const nounText = state.activeTab === "word" ? "量词或名词" : "量词";
+      const nounText = state.activeTab === "word" || state.activeTab === "noun" ? "量词或名词" : "量词";
       dom.searchMessage.textContent = `未找到${nounText}“${value || "（空）"}”。请输入列表中的完整词语。`;
       return;
     }
-    if (state.activeTab === "word") selectWordTarget(value); else selectClassifier(value);
+    if (state.activeTab === "word") {
+      selectWordTarget(value);
+    } else if (state.activeTab === "noun" && !classifierSet.has(value)) {
+      selectNoun(value);
+    } else {
+      selectClassifier(value);
+      if (state.activeTab === "noun" && nounSet.has(value)) {
+        dom.searchMessage.textContent = "该词同时存在量词和名词身份，当前按量词查询。";
+      }
+    }
   });
   syncInputs(dom.similaritySlider, dom.similarityNumber, (value) => {
     state.similarityThreshold = value; void renderNetwork();
@@ -1412,12 +1844,10 @@ function bindControls() {
     state.nounThreshold = value; void renderNetwork();
   });
   syncInputs(dom.wordPmiSlider, dom.wordPmiNumber, (value) => {
-    state.wordPmiThreshold = value; void renderNetwork();
+    state.wordPmiThreshold = value; scheduleWordNetworkRender();
   });
   bindCoOccurrenceInputs();
-  syncInputs(dom.wordDegreeSlider, dom.wordDegreeNumber, (value) => {
-    state.wordDegreeThreshold = Math.round(value); void renderNetwork();
-  });
+  bindDegreeInputs();
   dom.nounMetric.addEventListener("change", () => {
     state.nounMetric = dom.nounMetric.value; configureNounMetric(); void renderNetwork();
   });
@@ -1436,6 +1866,10 @@ function bindControls() {
   for (const [control, key] of wordSelects) {
     control.addEventListener("change", () => { state[key] = control.value; void renderNetwork(); });
   }
+  dom.wordCommunityMode.addEventListener("change", () => {
+    state.wordCommunityMode = dom.wordCommunityMode.value;
+    refreshWordCommunityPresentation();
+  });
   dom.resetView.addEventListener("click", () => {
     state.view = { x: 0, y: 0, scale: 1 }; updateViewportTransform();
   });
@@ -1465,11 +1899,31 @@ window.__NETWORK_DEBUG__ = {
       wordPmiThreshold: state.wordPmiThreshold, wordCoThreshold: state.wordCoThreshold,
       wordCoSliderPosition: Number(dom.wordCoSlider.value),
       wordDegreeThreshold: state.wordDegreeThreshold,
+      wordDegreeSliderPosition: Number(dom.wordDegreeSlider.value),
+      wordCommunityMode: state.wordCommunityMode,
+      localCommunityRunCount: state.wordCommunityRunCount,
+      localCommunityAvailable: state.currentGraph.localCommunityAvailable,
+      localCommunityCount: state.currentGraph.localCommunityCount,
+      localModularity: state.currentGraph.localModularity,
+      globalProjectedModularity: state.currentGraph.globalProjectedModularity,
+      globalModularity: GLOBAL_MODULARITY,
+      localPositiveEdgeCount: state.currentGraph.localPositiveEdgeCount,
+      localCommunityMs: state.currentGraph.localCommunityMs,
+      localCommunityCacheHit: state.currentGraph.localCommunityCacheHit,
+      totalGraphUpdateMs: state.currentGraph.totalUpdateMs,
       visibleNodeCount: state.currentGraph.nodes.length,
       visibleEdgeCount: state.currentGraph.edges.length,
+      directNeighborCount: state.currentGraph.directNeighborCount,
+      finalDirectNeighborCount: state.currentGraph.finalDirectNeighborCount,
+      centerValidNounCount: state.currentGraph.centerValidNounCount,
+      removedUnpairedClassifierCount: state.currentGraph.removedUnpairedClassifierCount,
+      validClassifierNounEdgeCount: state.currentGraph.validClassifierNounEdgeCount,
+      centerPrePruneDegree: state.currentGraph.centerPrePruneDegree,
       visibleLabels: state.currentGraph.nodes.map((node) => node.label),
       visibleNodes: state.currentGraph.nodes.map((node) => ({
         label: node.label, type: node.type, community: node.community,
+        localCommunity: node.localCommunity, globalCommunity: node.globalCommunity,
+        currentDegree: node.currentDegree, prePruneDegree: node.prePruneDegree,
         size: node.size, x: node.x, y: node.y, color: node.color,
       })),
       visibleEdges: state.currentGraph.edges.map((edge) => ({

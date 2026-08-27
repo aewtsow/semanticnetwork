@@ -891,6 +891,16 @@
       "eigenvector": "computed_exact_weighted"
     }
   },
-  "browserTop400AdjacencyRecordCount": 9282667,
-  "browserBinaryBytes": 111392004
+  "browserTop400AdjacencyRecordCount": 9268437,
+  "browserBinaryBytes": 111221244,
+  "browserRelationValidation": {
+    "validCommonPairCount": 44484,
+    "selfPairCountExcluded": 1,
+    "ambiguousUnorderedPairCount": 0,
+    "topKAppliedAfterLegalRelationFilter": true,
+    "maximumAdjacencyRecordsPerNode": 400,
+    "adjacencyRecordCount": 9268437
+  },
+  "classifierNounPolicy": "valid_common_only",
+  "topKAppliedAfterLegalRelationFilter": true
 }

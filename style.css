@@ -344,6 +344,21 @@ button:focus-visible {
   grid-template-columns: repeat(2, minmax(180px, 1fr));
 }
 
+.word-metric-grid .community-control {
+  grid-column: 1 / -1;
+}
+
+.word-metric-grid .community-control select {
+  max-width: 300px;
+}
+
+.control-help {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
 .word-threshold-grid > label,
 .word-metric-grid > label {
   display: flex;

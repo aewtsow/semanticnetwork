@@ -3,10 +3,9 @@
 from pathlib import Path
 import json
 import math
+import sys
 import zipfile
 
-import community
-import networkx as nx
 import numpy as np
 import pandas as pd
 from scipy import sparse
@@ -334,30 +333,81 @@ def top_indices(neighbors, score):
     return selected[np.lexsort((neighbors[selected], -score[selected]))]
 
 
+def build_valid_common_adjacency(valid_common, local_index, node_count):
+    """将 valid_common 的有向量词→名词关系转换为两端都可查询的合法邻接表。"""
+    targets = [[] for _ in range(node_count)]
+    co_values = [[] for _ in range(node_count)]
+    scores = [[] for _ in range(node_count)]
+    partners = [set() for _ in range(node_count)]
+    unordered_pairs = {}
+    self_pair_count = 0
+
+    for row in valid_common.itertuples(index=False):
+        source = int(local_index[str(row.classifier)])
+        target = int(local_index[str(row.word)])
+        if source == target:
+            self_pair_count += 1
+            continue
+        co = float(row.co_occurrence)
+        score = float(row.NPMI_log_co_score)
+        if co <= 0:
+            raise ValueError("valid_common 中存在 co_occurrence <= 0 的关系。")
+        pair_key = (min(source, target), max(source, target))
+        if pair_key in unordered_pairs:
+            previous = unordered_pairs[pair_key]
+            raise ValueError(
+                "valid_common 中同一无向节点对存在多个有向角色，当前二进制格式无法无歧义表示："
+                f"{previous} 与 {(str(row.classifier), str(row.word))}"
+            )
+        unordered_pairs[pair_key] = (str(row.classifier), str(row.word))
+        for left, right in ((source, target), (target, source)):
+            targets[left].append(right)
+            co_values[left].append(co)
+            scores[left].append(score)
+            partners[left].add(right)
+
+    target_arrays = [np.asarray(rows, dtype=np.int32) for rows in targets]
+    co_arrays = [np.asarray(rows, dtype=np.float64) for rows in co_values]
+    score_arrays = [np.asarray(rows, dtype=np.float64) for rows in scores]
+    return target_arrays, co_arrays, score_arrays, partners, {
+        "validCommonPairCount": len(unordered_pairs),
+        "selfPairCountExcluded": self_pair_count,
+        "ambiguousUnorderedPairCount": 0,
+    }
+
+
 def build_top400_adjacency(
-    classifier_noun, classifier_sym, noun_sym, classifier_nodes, noun_nodes,
-    row_sums, column_sums, sym_frequency, total,
+    valid_common, local_index, classifier_sym, noun_sym, classifier_nodes,
+    noun_nodes, sym_frequency, total,
 ):
-    noun_classifier = classifier_noun.T.tocsr()
     node_count = len(classifier_nodes) + len(noun_nodes)
     targets_by_node = [None] * node_count
     co_by_node = [None] * node_count
+    (
+        valid_targets, valid_co, valid_scores, valid_partners,
+        valid_common_report,
+    ) = build_valid_common_adjacency(valid_common, local_index, node_count)
 
     for class_row, local_source in enumerate(classifier_nodes):
         cc_start, cc_stop = classifier_sym.indptr[class_row:class_row + 2]
         cc_relative = classifier_sym.indices[cc_start:cc_stop]
         cc_neighbors = classifier_nodes[cc_relative]
         cc_co = classifier_sym.data[cc_start:cc_stop]
+        # 兼具名词身份的节点可能同时形成同类边与 valid_common 搭配边；
+        # 浏览器格式每个节点对只保留一条关系，明确让 valid_common 角色优先。
+        if len(cc_neighbors) and valid_partners[local_source]:
+            keep = np.fromiter(
+                (int(neighbor) not in valid_partners[local_source] for neighbor in cc_neighbors),
+                dtype=bool, count=len(cc_neighbors),
+            )
+            cc_neighbors = cc_neighbors[keep]
+            cc_co = cc_co[keep]
         _, _, cc_score = metric_arrays(
             cc_co, sym_frequency[local_source], sym_frequency[cc_neighbors], total
         )
-        cn_start, cn_stop = classifier_noun.indptr[class_row:class_row + 2]
-        cn_relative = classifier_noun.indices[cn_start:cn_stop]
-        cn_neighbors = noun_nodes[cn_relative]
-        cn_co = classifier_noun.data[cn_start:cn_stop]
-        _, _, cn_score = metric_arrays(
-            cn_co, row_sums[local_source], column_sums[cn_neighbors], total
-        )
+        cn_neighbors = valid_targets[local_source]
+        cn_co = valid_co[local_source]
+        cn_score = valid_scores[local_source]
         neighbors = np.concatenate([cc_neighbors, cn_neighbors]).astype(np.int32, copy=False)
         co = np.concatenate([cc_co, cn_co]).astype(np.float64, copy=False)
         score = np.concatenate([cc_score, cn_score])
@@ -373,13 +423,9 @@ def build_top400_adjacency(
         _, _, nn_score = metric_arrays(
             nn_co, sym_frequency[local_source], sym_frequency[nn_neighbors], total
         )
-        nc_start, nc_stop = noun_classifier.indptr[noun_row:noun_row + 2]
-        nc_relative = noun_classifier.indices[nc_start:nc_stop]
-        nc_neighbors = classifier_nodes[nc_relative]
-        nc_co = noun_classifier.data[nc_start:nc_stop]
-        _, _, nc_score = metric_arrays(
-            nc_co, row_sums[nc_neighbors], column_sums[local_source], total
-        )
+        nc_neighbors = valid_targets[local_source]
+        nc_co = valid_co[local_source]
+        nc_score = valid_scores[local_source]
         neighbors = np.concatenate([nn_neighbors, nc_neighbors]).astype(np.int32, copy=False)
         co = np.concatenate([nn_co, nc_co]).astype(np.float64, copy=False)
         score = np.concatenate([nn_score, nc_score])
@@ -388,7 +434,12 @@ def build_top400_adjacency(
         co_by_node[local_source] = co[selected].copy()
         if (noun_row + 1) % 1000 == 0 or noun_row + 1 == len(noun_nodes):
             print(f"已计算 Top-{TOP_K}：{noun_row + 1:,}/{len(noun_nodes):,} 个名词", flush=True)
-    return targets_by_node, co_by_node
+    valid_common_report.update({
+        "topKAppliedAfterLegalRelationFilter": True,
+        "maximumAdjacencyRecordsPerNode": int(max(map(len, targets_by_node))),
+        "adjacencyRecordCount": int(sum(map(len, targets_by_node))),
+    })
+    return targets_by_node, co_by_node, valid_common_report
 
 
 def write_edge_chunks(targets_by_node, co_by_node):
@@ -443,6 +494,8 @@ def build_analysis_graph(
     node_count, classifier_noun, classifier_sym, noun_sym, classifier_nodes,
     noun_nodes, row_sums, column_sums, sym_frequency, total,
 ):
+    import networkx as nx
+
     graph = nx.Graph()
     graph.add_nodes_from(range(node_count))
     add_same_type_community_edges(
@@ -478,6 +531,9 @@ def build_analysis_graph(
 
 
 def calculate_graph_metrics(graph, node_count):
+    import community
+    import networkx as nx
+
     communities = np.full(node_count, -1, dtype=np.int32)
     clustering = np.full(node_count, np.nan)
     eigenvector = np.full(node_count, np.nan)
@@ -525,6 +581,13 @@ def calculate_graph_metrics(graph, node_count):
 
 def nullable_float(value):
     return None if not np.isfinite(value) else float(value)
+
+
+def read_js_value(path, variable_name):
+    text = path.read_text(encoding="utf-8")
+    marker = f"window.{variable_name} = "
+    start = text.index(marker) + len(marker)
+    return json.loads(text[start:].strip().removesuffix(";"))
 
 
 def main():
@@ -600,10 +663,10 @@ def main():
     )
     metrics, graph_report = calculate_graph_metrics(analysis_graph, node_count)
 
-    print("计算浏览器显示用全量排序 Top-400…", flush=True)
-    targets_by_node, co_by_node = build_top400_adjacency(
-        classifier_noun, classifier_sym, noun_sym, classifier_nodes, noun_nodes,
-        row_sums, column_sums, sym_frequency, total,
+    print("计算浏览器显示用合法关系排序 Top-400…", flush=True)
+    targets_by_node, co_by_node, browser_relation_report = build_top400_adjacency(
+        valid_common, local_index, classifier_sym, noun_sym, classifier_nodes,
+        noun_nodes, sym_frequency, total,
     )
     edge_locations, chunks = write_edge_chunks(targets_by_node, co_by_node)
     displayed_co = np.concatenate(co_by_node)
@@ -639,10 +702,16 @@ def main():
         })
 
     manifest = {
-        "version": 2,
+        "version": 3,
         "relationModel": "classifier→noun directed; same-type bidirectional mean",
         "topKPerNode": TOP_K,
-        "topKMetric": "NPMI_log_co_score computed from all valid-word relations",
+        "topKMetric": (
+            "NPMI_log_co_score after restricting classifier→noun to valid_common; "
+            "same-type relations unchanged"
+        ),
+        "classifierNounPolicy": "valid_common_only",
+        "topKAppliedAfterLegalRelationFilter": True,
+        "browserRelationValidation": browser_relation_report,
         "recordBytes": 12,
         "recordLayout": "uint32 neighborLocalIndex + float64 coOccurrence (little-endian)",
         "total": total,
@@ -691,17 +760,18 @@ def main():
         "largestFullConnectedComponentSize": int(full_component_sizes.max()),
         "communityGraph": manifest["communityGraph"],
         "browserTop400AdjacencyRecordCount": manifest["top400AdjacencyRecordCount"],
+        "browserRelationValidation": browser_relation_report,
         "browserBinaryBytes": int(sum(chunk["recordCount"] for chunk in chunks) * 12),
     }
 
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     write_js(
         DATA_DIR / "word_network_nodes.js", "WORD_NETWORK_NODES", nodes,
-        "Mixed-relation nodes; full statistics with per-node Top-400 browser index.",
+        "Mixed-relation nodes; global statistics preserved with legal per-node Top-400 browser index.",
     )
     write_js(
         DATA_DIR / "word_network_edges.js", "WORD_NETWORK_EDGE_MANIFEST", manifest,
-        "Mixed-relation Top-400 browser adjacency generated from full statistics.",
+        "Top-400 browser adjacency; classifier→noun restricted to valid_common before ranking.",
     )
     (DATA_DIR / "word_network_build_report.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
@@ -737,5 +807,105 @@ def main():
     }, ensure_ascii=False, indent=2), flush=True)
 
 
+def regenerate_browser_data_only():
+    """重建合法 Top-400 分块，同时原样保留现有 Global Community 与节点指标。"""
+    excel = pd.ExcelFile(VALID_COMMON_PATH)
+    if len(excel.sheet_names) != 1:
+        raise ValueError("valid_common.xlsx 必须只有一个可明确识别的工作表。")
+    valid_common = pd.read_excel(excel, sheet_name=excel.sheet_names[0])
+    missing_columns = [column for column in REQUIRED_COLUMNS if column not in valid_common.columns]
+    if missing_columns:
+        raise ValueError(f"valid_common.xlsx 缺少字段：{missing_columns}")
+    if valid_common[REQUIRED_COLUMNS].isna().any().any():
+        raise ValueError("valid_common.xlsx 的必需字段存在缺失值。")
+    if valid_common.duplicated(["classifier", "word"]).any():
+        raise ValueError("valid_common.xlsx 存在重复 classifier—word 配对。")
+
+    vocab = pd.read_csv(VOCAB_PATH, header=None, usecols=[0])[0].astype(str).tolist()
+    ensure_caches(valid_common, vocab)
+    valid_words = json.loads((CACHE_DIR / "valid_words.json").read_text(encoding="utf-8"))
+    local_index = {word: index for index, word in enumerate(valid_words)}
+    classifier_nodes = np.load(CACHE_DIR / "classifier_nodes.npy")
+    noun_nodes = np.load(CACHE_DIR / "noun_nodes.npy")
+    classifier_sym = load_csr(
+        "classifier_sym", (len(classifier_nodes), len(classifier_nodes))
+    )
+    noun_sym = load_csr("noun_sym", (len(noun_nodes), len(noun_nodes)))
+    sym_frequency = np.load(CACHE_DIR / "sym_frequency.npy")
+    with np.load(GLOBAL_STATS_PATH, allow_pickle=False) as stats:
+        total = float(stats["N"])
+
+    print("重建 valid_common 优先的浏览器 Top-400…", flush=True)
+    targets_by_node, co_by_node, browser_relation_report = build_top400_adjacency(
+        valid_common, local_index, classifier_sym, noun_sym, classifier_nodes,
+        noun_nodes, sym_frequency, total,
+    )
+    edge_locations, chunks = write_edge_chunks(targets_by_node, co_by_node)
+    displayed_co = np.concatenate(co_by_node)
+    co_quantiles = {
+        str(percentile): float(np.quantile(displayed_co, percentile))
+        for percentile in [0, 0.25, 0.5, 0.75, 0.9, 0.95, 0.99, 1]
+    }
+
+    nodes_path = DATA_DIR / "word_network_nodes.js"
+    manifest_path = DATA_DIR / "word_network_edges.js"
+    nodes = read_js_value(nodes_path, "WORD_NETWORK_NODES")
+    manifest = read_js_value(manifest_path, "WORD_NETWORK_EDGE_MANIFEST")
+    if [node["id"] for node in nodes] != valid_words:
+        raise ValueError("现有 word_network_nodes.js 与 valid_words 顺序不一致。")
+    for node, location in zip(nodes, edge_locations, strict=True):
+        node.update(location)
+
+    manifest.update({
+        "version": 3,
+        "topKPerNode": TOP_K,
+        "topKMetric": (
+            "NPMI_log_co_score after restricting classifier→noun to valid_common; "
+            "same-type relations unchanged"
+        ),
+        "classifierNounPolicy": "valid_common_only",
+        "topKAppliedAfterLegalRelationFilter": True,
+        "browserRelationValidation": browser_relation_report,
+        "top400AdjacencyRecordCount": int(sum(map(len, targets_by_node))),
+        "chunks": chunks,
+        "coOccurrenceMax": float(displayed_co.max()),
+        "coOccurrenceQuantiles": co_quantiles,
+    })
+    manifest.setdefault(
+        "fullRelationCountsScope",
+        "preserved global analysis graph; browser classifier→noun policy is reported separately",
+    )
+    write_js(
+        nodes_path, "WORD_NETWORK_NODES", nodes,
+        "Mixed-relation nodes; global statistics preserved with legal per-node Top-400 browser index.",
+    )
+    write_js(
+        manifest_path, "WORD_NETWORK_EDGE_MANIFEST", manifest,
+        "Top-400 browser adjacency; classifier→noun restricted to valid_common before ranking.",
+    )
+
+    report_path = DATA_DIR / "word_network_build_report.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    report.update({
+        "browserTop400AdjacencyRecordCount": manifest["top400AdjacencyRecordCount"],
+        "browserBinaryBytes": int(manifest["top400AdjacencyRecordCount"] * 12),
+        "browserRelationValidation": browser_relation_report,
+        "classifierNounPolicy": "valid_common_only",
+        "topKAppliedAfterLegalRelationFilter": True,
+    })
+    report_path.write_text(
+        json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    print(json.dumps({
+        "browserRecords": manifest["top400AdjacencyRecordCount"],
+        "browserBinaryBytes": report["browserBinaryBytes"],
+        "browserRelationValidation": browser_relation_report,
+        "globalCommunityPreserved": True,
+    }, ensure_ascii=False, indent=2), flush=True)
+
+
 if __name__ == "__main__":
-    main()
+    if "--browser-only" in sys.argv:
+        regenerate_browser_data_only()
+    else:
+        main()
