@@ -68,6 +68,20 @@ const dom = {
   primaryMetric: document.querySelector("#primaryMetric"),
   thresholdNote: document.querySelector("#thresholdNote"),
   infoSections: document.querySelector("#infoSections"),
+  openStarMap: document.querySelector("#openStarMap"),
+  starMap: document.querySelector("#starMap"),
+  closeStarMap: document.querySelector("#closeStarMap"),
+  starRuleMenu: document.querySelector("#starRuleMenu"),
+  starStage: document.querySelector("#starStage"),
+  starSvg: document.querySelector("#starSvg"),
+  starViewport: document.querySelector("#starViewport"),
+  starField: document.querySelector("#starField"),
+  starOrbitLayer: document.querySelector("#starOrbitLayer"),
+  starEdgeLayer: document.querySelector("#starEdgeLayer"),
+  starNodeLayer: document.querySelector("#starNodeLayer"),
+  starLoading: document.querySelector("#starLoading"),
+  starEmpty: document.querySelector("#starEmpty"),
+  starStatus: document.querySelector("#starStatus"),
 };
 
 const classifierToNouns = new Map();
@@ -138,6 +152,20 @@ const COMMUNITY_COLORS = [
 const NEUTRAL_COMMUNITY_COLOR = "#aaa79f";
 const GLOBAL_MODULARITY = Number(wordManifest.communityGraph?.modularity);
 const WORD_RENDER_DEBOUNCE_MS = 220;
+const STAR_PMI_THRESHOLD = 3;
+const STAR_CO_THRESHOLD = 100;
+const STAR_DEGREE_THRESHOLD = 2;
+const STAR_CENTER_X = 600;
+const STAR_CENTER_Y = 400;
+const STAR_VIEWBOX_WIDTH = 1200;
+const STAR_VIEWBOX_HEIGHT = 800;
+const STAR_FRAME_INTERVAL_MS = 1000 / 24;
+const STAR_LIVE_MOTION_EDGE_LIMIT = 600;
+const STAR_GLOBE_RADIUS_X = 500;
+const STAR_GLOBE_RADIUS_Y = 305;
+const STAR_TURN_DURATION_MS = 900;
+const STAR_ARRIVAL_DURATION_MS = 1000;
+const STAR_ARRIVAL_STAGGER_MS = 180;
 const nounMetricSpecs = {
   score: {
     label: "NPMI_log_co_score", direction: "lte", step: 0.01,
@@ -185,6 +213,7 @@ const state = {
   wordRenderTimer: null,
   wordBuffersLoaded: false,
   wordBuffersPromise: null,
+  wordChunkPromises: new Map(),
   layoutSeed: 0,
   view: { x: 0, y: 0, scale: 1 },
   currentGraph: { nodes: [], edges: [], visibleCount: 0 },
@@ -194,6 +223,16 @@ const state = {
   wordLayoutTarget: null,
   wordPositionCache: new Map(),
   wordSimulation: null,
+  starOpen: false,
+  starGraph: null,
+  starAnimationFrame: null,
+  starAnimationStarted: null,
+  starLastFrame: 0,
+  starRenderToken: 0,
+  starTransitioning: false,
+  starView: { x: 0, y: 0, scale: 1 },
+  starPan: null,
+  starSuppressClickUntil: 0,
 };
 
 let suppressNextNodeClick = false;
@@ -395,14 +434,30 @@ function buildNounCenterGraph() {
   };
 }
 
+function loadWordChunk(chunkIndex) {
+  if (wordChunkBuffers.has(chunkIndex)) return Promise.resolve();
+  if (!state.wordChunkPromises.has(chunkIndex)) {
+    const chunk = wordManifest.chunks[chunkIndex];
+    const promise = fetch(`${wordManifest.chunkBasePath}${chunk.file}`).then(async (response) => {
+      if (!response.ok) throw new Error(`词汇网络数据分块加载失败：${chunk.file}`);
+      wordChunkBuffers.set(chunkIndex, await response.arrayBuffer());
+    });
+    state.wordChunkPromises.set(chunkIndex, promise);
+  }
+  return state.wordChunkPromises.get(chunkIndex);
+}
+
+async function ensureWordChunks(nodeIndices) {
+  const chunkIndices = new Set(nodeIndices.map((index) => wordNodes[index].chunk));
+  await Promise.all([...chunkIndices].map(loadWordChunk));
+}
+
 async function ensureWordBuffers() {
   if (state.wordBuffersLoaded) return;
   if (!state.wordBuffersPromise) {
-    state.wordBuffersPromise = Promise.all(wordManifest.chunks.map(async (chunk, index) => {
-      const response = await fetch(`${wordManifest.chunkBasePath}${chunk.file}`);
-      if (!response.ok) throw new Error(`词汇网络数据分块加载失败：${chunk.file}`);
-      wordChunkBuffers.set(index, await response.arrayBuffer());
-    })).then(() => { state.wordBuffersLoaded = true; });
+    state.wordBuffersPromise = Promise.all(
+      wordManifest.chunks.map((_, index) => loadWordChunk(index)),
+    ).then(() => { state.wordBuffersLoaded = true; });
   }
   await state.wordBuffersPromise;
 }
@@ -817,6 +872,866 @@ function buildWordGraph() {
   return graph;
 }
 
+function starRelationPasses(edge) {
+  return edge.pmi > STAR_PMI_THRESHOLD && edge.coOccurrence > STAR_CO_THRESHOLD;
+}
+
+async function ensureStarGraphBuffers(targetIndex) {
+  await ensureWordChunks([targetIndex]);
+  const directNeighborIndices = incidentWordRelations(targetIndex)
+    .filter((edge) => targetRelationIsAllowed(targetIndex, edge) && starRelationPasses(edge))
+    .map((edge) => edge.neighborIndex);
+  await ensureWordChunks([targetIndex, ...directNeighborIndices]);
+}
+
+function buildStarGraph(targetIndex = wordNodeById.get(state.wordTarget).index) {
+  const targetRelations = incidentWordRelations(targetIndex).filter(
+    (edge) => targetRelationIsAllowed(targetIndex, edge) && starRelationPasses(edge),
+  );
+  const candidateIndices = new Set([targetIndex, ...targetRelations.map((edge) => edge.neighborIndex)]);
+  const edgeByKey = new Map();
+  for (const nodeIndex of candidateIndices) {
+    for (const edge of incidentWordRelations(nodeIndex)) {
+      if (!candidateIndices.has(edge.neighborIndex) || !starRelationPasses(edge)) continue;
+      if (!edgeByKey.has(edge.key)) edgeByKey.set(edge.key, edge);
+    }
+  }
+  const filteredEdges = [...edgeByKey.values()];
+  const prePruneDegree = weakDegree(candidateIndices, filteredEdges);
+  const visibleIndices = new Set([targetIndex]);
+  for (const nodeIndex of candidateIndices) {
+    if (nodeIndex !== targetIndex && (prePruneDegree.get(nodeIndex) || 0) > STAR_DEGREE_THRESHOLD) {
+      visibleIndices.add(nodeIndex);
+    }
+  }
+  let visibleEdges = filteredEdges.filter(
+    (edge) => visibleIndices.has(edge.sourceIndex) && visibleIndices.has(edge.targetIndex),
+  );
+
+  const classifiersWithVisibleNoun = new Set();
+  const overlapNodesServingAsNouns = new Set();
+  for (const edge of visibleEdges) {
+    if (edge.relationType !== "classifier_noun") continue;
+    classifiersWithVisibleNoun.add(edge.sourceIndex);
+    if (wordNodes[edge.targetIndex].alsoNoun) overlapNodesServingAsNouns.add(edge.targetIndex);
+  }
+  for (const nodeIndex of [...visibleIndices]) {
+    if (nodeIndex === targetIndex || wordNodes[nodeIndex].type !== "classifier") continue;
+    if (classifiersWithVisibleNoun.has(nodeIndex) || overlapNodesServingAsNouns.has(nodeIndex)) continue;
+    visibleIndices.delete(nodeIndex);
+  }
+  visibleEdges = visibleEdges.filter(
+    (edge) => visibleIndices.has(edge.sourceIndex) && visibleIndices.has(edge.targetIndex),
+  );
+
+  const currentDegree = weakDegree(visibleIndices, visibleEdges);
+  const directRelationByIndex = new Map(
+    targetRelations
+      .filter((edge) => visibleIndices.has(edge.neighborIndex))
+      .map((edge) => [edge.neighborIndex, edge]),
+  );
+  const nodes = [...visibleIndices].map((wordIndex) => ({
+    wordIndex,
+    label: wordNodes[wordIndex].id,
+    type: wordNodes[wordIndex].type,
+    alsoNoun: wordNodes[wordIndex].alsoNoun,
+    community: wordNodes[wordIndex].community,
+    center: wordIndex === targetIndex,
+    currentDegree: currentDegree.get(wordIndex) || 0,
+    prePruneDegree: prePruneDegree.get(wordIndex) || 0,
+    fullDegree: wordNodes[wordIndex].degreeFull,
+    directRelation: directRelationByIndex.get(wordIndex) || null,
+    x: STAR_CENTER_X,
+    y: STAR_CENTER_Y,
+  }));
+  const neighborByIndex = new Map(nodes.map((node) => [node.wordIndex, new Set()]));
+  for (const edge of visibleEdges) {
+    neighborByIndex.get(edge.sourceIndex)?.add(edge.targetIndex);
+    neighborByIndex.get(edge.targetIndex)?.add(edge.sourceIndex);
+  }
+  return {
+    targetIndex,
+    nodes,
+    edges: visibleEdges,
+    nodeByIndex: new Map(nodes.map((node) => [node.wordIndex, node])),
+    neighborByIndex,
+    directNeighborCount: directRelationByIndex.size,
+    candidateCount: candidateIndices.size,
+  };
+}
+
+function assignStarLayout(graph) {
+  const center = graph.nodeByIndex.get(graph.targetIndex);
+  center.x = STAR_CENTER_X;
+  center.y = STAR_CENTER_Y;
+  center.size = 16;
+  center.orbit = null;
+
+  const orbiting = graph.nodes.filter((node) => !node.center).sort((a, b) => {
+    const pmiDifference = (b.directRelation?.pmi || 0) - (a.directRelation?.pmi || 0);
+    return pmiDifference || zhSort(a.label, b.label);
+  });
+  if (!orbiting.length) return;
+  const degreeRange = extent(orbiting.map((node) => node.prePruneDegree));
+  const ringCount = Math.min(4, Math.max(1, Math.ceil(orbiting.length / 26)));
+  const perRing = Math.ceil(orbiting.length / ringCount);
+  const xStart = ringCount === 1 ? 280 : 155;
+  const xStep = ringCount === 1 ? 0 : 315 / (ringCount - 1);
+  const yStart = ringCount === 1 ? 168 : 92;
+  const yStep = ringCount === 1 ? 0 : 190 / (ringCount - 1);
+  const layoutTarget = wordNodes[graph.targetIndex].id;
+
+  orbiting.forEach((node, rank) => {
+    const ring = Math.min(ringCount - 1, Math.floor(rank / perRing));
+    const ringStart = ring * perRing;
+    const ringPopulation = Math.min(perRing, orbiting.length - ringStart);
+    const slot = rank - ringStart;
+    const random = seededRandom(`${layoutTarget}|${node.label}|star`);
+    const angle = slot / Math.max(1, ringPopulation) * Math.PI * 2
+      + random() * 0.18 + ring * 0.47;
+    const tilt = (random() - 0.5) * 0.34;
+    const radiusX = xStart + ring * xStep + (random() - 0.5) * 26;
+    const radiusY = yStart + ring * yStep + (random() - 0.5) * 18;
+    node.size = scaleSqrt(node.prePruneDegree, degreeRange, 4, 8.6)
+      + (node.type === "classifier" ? 0.8 : 0);
+    node.orbit = {
+      ring,
+      radiusX,
+      radiusY,
+      tilt,
+      angle,
+      speed: (ring % 2 === 0 ? 1 : -1) * (0.000018 + random() * 0.00002),
+    };
+  });
+  graph.rings = [...new Set(orbiting.map((node) => node.orbit.ring))].map((ring) => {
+    const members = orbiting.filter((node) => node.orbit.ring === ring);
+    return {
+      ring,
+      radiusX: members.reduce((sum, node) => sum + node.orbit.radiusX, 0) / members.length,
+      radiusY: members.reduce((sum, node) => sum + node.orbit.radiusY, 0) / members.length,
+      tilt: members.reduce((sum, node) => sum + node.orbit.tilt, 0) / members.length,
+    };
+  });
+}
+
+function starPointOnOrbit(orbit, elapsed) {
+  const angle = orbit.angle + elapsed * orbit.speed;
+  const rawX = Math.cos(angle) * orbit.radiusX;
+  const rawY = Math.sin(angle) * orbit.radiusY;
+  const cosTilt = Math.cos(orbit.tilt);
+  const sinTilt = Math.sin(orbit.tilt);
+  return {
+    x: STAR_CENTER_X + rawX * cosTilt - rawY * sinTilt,
+    y: STAR_CENTER_Y + rawX * sinTilt + rawY * cosTilt,
+  };
+}
+
+function starClassifierPath(size) {
+  const inner = size * 0.34;
+  return [
+    `M 0 ${-size}`,
+    `L ${inner} ${-inner}`,
+    `L ${size} 0`,
+    `L ${inner} ${inner}`,
+    `L 0 ${size}`,
+    `L ${-inner} ${inner}`,
+    `L ${-size} 0`,
+    `L ${-inner} ${-inner}`,
+    "Z",
+  ].join(" ");
+}
+
+function starEdgePath(edges, nodeByIndex) {
+  const segments = [];
+  for (const edge of edges) {
+    const source = nodeByIndex.get(edge.sourceIndex);
+    const target = nodeByIndex.get(edge.targetIndex);
+    if (!source || !target) continue;
+    segments.push(`M${source.x.toFixed(2)} ${source.y.toFixed(2)}L${target.x.toFixed(2)} ${target.y.toFixed(2)}`);
+  }
+  return segments.join("");
+}
+
+function updateBundledStarEdges(graph) {
+  for (const bundle of graph.edgeBundles || []) {
+    bundle.element.setAttribute("d", starEdgePath(bundle.edges, graph.nodeByIndex));
+  }
+  if (graph.activeEdgeElement) {
+    graph.activeEdgeElement.setAttribute(
+      "d",
+      starEdgePath(graph.activeEdges || [], graph.nodeByIndex),
+    );
+  }
+}
+
+function updateStarGeometry(elapsed) {
+  const graph = state.starGraph;
+  if (!graph) return;
+  for (const node of graph.nodes) {
+    if (node.orbit) {
+      const point = starPointOnOrbit(node.orbit, elapsed);
+      node.x = point.x;
+      node.y = point.y;
+    }
+    node.element?.setAttribute("transform", `translate(${node.x} ${node.y})`);
+  }
+  if (graph.edgeBundles) {
+    updateBundledStarEdges(graph);
+  } else {
+    for (const edge of graph.edges) {
+      const source = graph.nodeByIndex.get(edge.sourceIndex);
+      const target = graph.nodeByIndex.get(edge.targetIndex);
+      edge.element?.setAttribute("x1", source.x);
+      edge.element?.setAttribute("y1", source.y);
+      edge.element?.setAttribute("x2", target.x);
+      edge.element?.setAttribute("y2", target.y);
+    }
+  }
+}
+
+function stopStarMotion() {
+  if (state.starAnimationFrame !== null) cancelAnimationFrame(state.starAnimationFrame);
+  state.starAnimationFrame = null;
+  state.starAnimationStarted = null;
+  state.starLastFrame = 0;
+}
+
+function tickStarMap(timestamp) {
+  if (!state.starOpen || !state.starGraph || state.starTransitioning) {
+    state.starAnimationFrame = null;
+    return;
+  }
+  if (state.starAnimationStarted === null) {
+    state.starAnimationStarted = timestamp - (state.starGraph.motionElapsed || 0);
+  }
+  const frameInterval = state.starGraph.edgeBundles ? 1000 / 12 : STAR_FRAME_INTERVAL_MS;
+  if (timestamp - state.starLastFrame >= frameInterval) {
+    state.starGraph.motionElapsed = timestamp - state.starAnimationStarted;
+    updateStarGeometry(state.starGraph.motionElapsed);
+    state.starLastFrame = timestamp;
+  }
+  state.starAnimationFrame = requestAnimationFrame(tickStarMap);
+}
+
+function startStarMotion() {
+  stopStarMotion();
+  if (!state.starOpen || state.starTransitioning || state.starPan || state.starGraph?.hoveredIndex != null) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return;
+  }
+  state.starAnimationFrame = requestAnimationFrame(tickStarMap);
+}
+
+function starSpherePoint(x, y) {
+  let sphereX = (x - STAR_CENTER_X) / STAR_GLOBE_RADIUS_X;
+  let sphereY = (y - STAR_CENTER_Y) / STAR_GLOBE_RADIUS_Y;
+  const radial = Math.hypot(sphereX, sphereY);
+  if (radial > 0.965) {
+    const shrink = 0.965 / radial;
+    sphereX *= shrink;
+    sphereY *= shrink;
+  }
+  return {
+    x: sphereX,
+    y: sphereY,
+    z: Math.sqrt(Math.max(0.001, 1 - sphereX * sphereX - sphereY * sphereY)),
+  };
+}
+
+function createStarGlobeTurn(targetNode) {
+  const target = starSpherePoint(targetNode.x, targetNode.y);
+  const planarLength = Math.hypot(target.x, target.y);
+  if (planarLength < 0.0001) {
+    return { axis: { x: 0, y: 1, z: 0 }, angle: 0 };
+  }
+  return {
+    axis: {
+      x: target.y / planarLength,
+      y: -target.x / planarLength,
+      z: 0,
+    },
+    angle: Math.acos(clamp(target.z, -1, 1)),
+  };
+}
+
+function rotateStarVector(vector, axis, angle) {
+  if (Math.abs(angle) < 0.0001) return vector;
+  const cosine = Math.cos(angle);
+  const sine = Math.sin(angle);
+  const dot = axis.x * vector.x + axis.y * vector.y + axis.z * vector.z;
+  const cross = {
+    x: axis.y * vector.z - axis.z * vector.y,
+    y: axis.z * vector.x - axis.x * vector.z,
+    z: axis.x * vector.y - axis.y * vector.x,
+  };
+  return {
+    x: vector.x * cosine + cross.x * sine + axis.x * dot * (1 - cosine),
+    y: vector.y * cosine + cross.y * sine + axis.y * dot * (1 - cosine),
+    z: vector.z * cosine + cross.z * sine + axis.z * dot * (1 - cosine),
+  };
+}
+
+function projectStarGlobePoint(node, turn, progress) {
+  const rotated = rotateStarVector(
+    starSpherePoint(node.x, node.y),
+    turn.axis,
+    turn.angle * progress,
+  );
+  return {
+    x: STAR_CENTER_X + rotated.x * STAR_GLOBE_RADIUS_X,
+    y: STAR_CENTER_Y + rotated.y * STAR_GLOBE_RADIUS_Y,
+    depth: rotated.z,
+  };
+}
+
+function starDepthOpacity(depth, isCenter = false) {
+  if (isCenter) return 1;
+  return clamp(0.18 + (depth + 1) * 0.32, 0.18, 0.82);
+}
+
+function absoluteStarTransform(point) {
+  return `translate(${point.x}px, ${point.y}px)`;
+}
+
+function animateStarArrival(graph, originPositions) {
+  if (!originPositions || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false;
+  for (const node of graph.nodes) {
+    const retainedOrigin = originPositions.get(node.wordIndex);
+    const arrivalRandom = seededRandom(`${wordNodes[graph.targetIndex].id}|${node.label}|arrival`);
+    const arrivalDelay = retainedOrigin ? 0 : 35 + arrivalRandom() * STAR_ARRIVAL_STAGGER_MS;
+    const origin = retainedOrigin || {
+      x: STAR_CENTER_X + (node.x - STAR_CENTER_X) * 1.08,
+      y: STAR_CENTER_Y + (node.y - STAR_CENTER_Y) * 1.08,
+      depth: -0.2,
+    };
+    const midpoint = {
+      x: origin.x + (node.x - origin.x) * 0.58,
+      y: origin.y + (node.y - origin.y) * 0.58,
+    };
+    node.element.animate([
+      {
+        transform: absoluteStarTransform(origin),
+        opacity: retainedOrigin ? origin.opacity : 0,
+        offset: 0,
+      },
+      {
+        transform: absoluteStarTransform(midpoint),
+        opacity: node.center ? 1 : 0.68,
+        offset: 0.58,
+      },
+      {
+        transform: absoluteStarTransform(node),
+        opacity: node.center ? 1 : 0.82,
+        offset: 1,
+      },
+    ], {
+      duration: STAR_ARRIVAL_DURATION_MS,
+      delay: arrivalDelay,
+      easing: "cubic-bezier(0.4, 0, 0.2, 1)",
+      fill: "backwards",
+    });
+    node.visualElement.animate([
+      { transform: `scale(${retainedOrigin ? retainedOrigin.size / node.size : 0.72})` },
+      { transform: "scale(1)" },
+    ], {
+      duration: STAR_ARRIVAL_DURATION_MS,
+      delay: arrivalDelay,
+      easing: "ease-in-out",
+      fill: "backwards",
+    });
+  }
+  dom.starEdgeLayer.animate(
+    [{ opacity: 0 }, { opacity: 1 }],
+    { duration: STAR_ARRIVAL_DURATION_MS, delay: 70, easing: "ease-out", fill: "backwards" },
+  );
+  dom.starOrbitLayer.animate(
+    [{ opacity: 0 }, { opacity: 1 }],
+    { duration: STAR_ARRIVAL_DURATION_MS, easing: "ease-out" },
+  );
+  return true;
+}
+
+function renderStarField(graph, originPositions = null) {
+  stopStarMotion();
+  // These containers survive graph replacement; a forwards-filled departure
+  // animation must not reappear when the arrival animation ends.
+  for (const layer of [dom.starEdgeLayer, dom.starOrbitLayer]) {
+    for (const animation of layer.getAnimations()) animation.cancel();
+  }
+  const denseGraph = graph.edges.length > STAR_LIVE_MOTION_EDGE_LIMIT;
+  graph.edgeBundles = denseGraph ? [] : null;
+  graph.activeEdges = [];
+  graph.activeEdgeElement = null;
+  dom.starStage.classList.toggle("is-dense", denseGraph);
+  dom.starOrbitLayer.replaceChildren();
+  dom.starEdgeLayer.replaceChildren();
+  dom.starNodeLayer.replaceChildren();
+  const orbitFragment = document.createDocumentFragment();
+  for (const ring of graph.rings || []) {
+    orbitFragment.append(createSvg("ellipse", {
+      class: "star-orbit",
+      cx: STAR_CENTER_X,
+      cy: STAR_CENTER_Y,
+      rx: ring.radiusX,
+      ry: ring.radiusY,
+      transform: `rotate(${ring.tilt * 180 / Math.PI} ${STAR_CENTER_X} ${STAR_CENTER_Y})`,
+    }));
+  }
+  dom.starOrbitLayer.append(orbitFragment);
+
+  const coRange = graph.edges.length
+    ? extent(graph.edges.map((edge) => Math.log1p(edge.coOccurrence))) : [0, 1];
+  const edgeFragment = document.createDocumentFragment();
+  if (denseGraph) {
+    const peripheralBins = [[], [], []];
+    const centerEdges = [];
+    for (const edge of graph.edges) {
+      edge.element = null;
+      const direct = edge.sourceIndex === graph.targetIndex || edge.targetIndex === graph.targetIndex;
+      if (direct) {
+        centerEdges.push(edge);
+        continue;
+      }
+      const strength = scaleLinear(Math.log1p(edge.coOccurrence), coRange, 0, 2.999);
+      peripheralBins[Math.min(2, Math.floor(strength))].push(edge);
+    }
+    const bundleSpecs = [
+      { edges: peripheralBins[0], opacity: 0.05, width: 0.42, className: "" },
+      { edges: peripheralBins[1], opacity: 0.09, width: 0.62, className: "" },
+      { edges: peripheralBins[2], opacity: 0.15, width: 0.86, className: "" },
+      { edges: centerEdges, opacity: 0.38, width: 1.12, className: " is-center-link" },
+    ];
+    for (const spec of bundleSpecs) {
+      if (!spec.edges.length) continue;
+      const element = createSvg("path", {
+        class: `star-edge star-edge-bundle${spec.className}`,
+        fill: "none",
+      });
+      element.style.opacity = String(spec.opacity);
+      element.style.strokeWidth = String(spec.width);
+      graph.edgeBundles.push({ element, edges: spec.edges });
+      edgeFragment.append(element);
+    }
+    graph.activeEdgeElement = createSvg("path", {
+      class: "star-edge star-edge-active-bundle is-active",
+      fill: "none",
+      d: "",
+    });
+    edgeFragment.append(graph.activeEdgeElement);
+  } else {
+    for (const edge of graph.edges) {
+      const direct = edge.sourceIndex === graph.targetIndex || edge.targetIndex === graph.targetIndex;
+      const element = createSvg("line", {
+        class: `star-edge${direct ? " is-center-link" : ""}`,
+        "data-source-index": edge.sourceIndex,
+        "data-target-index": edge.targetIndex,
+      });
+      element.style.opacity = String(scaleLinear(
+        Math.log1p(edge.coOccurrence), coRange, direct ? 0.2 : 0.045, direct ? 0.48 : 0.16,
+      ));
+      element.style.strokeWidth = String(scaleLinear(
+        Math.log1p(edge.coOccurrence), coRange, direct ? 0.8 : 0.35, direct ? 1.55 : 0.8,
+      ));
+      edge.element = element;
+      edgeFragment.append(element);
+    }
+  }
+  dom.starEdgeLayer.append(edgeFragment);
+
+  const nodeFragment = document.createDocumentFragment();
+  for (const node of graph.nodes) {
+    const group = createSvg("g", {
+      class: `star-node ${node.type}${node.center ? " center" : ""}`,
+      "data-word-index": node.wordIndex,
+      role: "button",
+      tabindex: "0",
+      "aria-label": `${node.label}，点击设为星图中心`,
+    });
+    const halo = createSvg("circle", {
+      class: "star-node-halo",
+      r: node.center ? node.size * 2.8 : node.size * 2.25,
+    });
+    const core = node.type === "classifier" && !node.center
+      ? createSvg("path", {
+        class: "star-node-core star-classifier-core",
+        d: starClassifierPath(node.size),
+        fill: "url(#starClassifierGradient)",
+      })
+      : createSvg("circle", {
+        class: "star-node-core",
+        r: node.size,
+        fill: node.center ? "url(#starCenterGradient)" : "url(#starNounGradient)",
+      });
+    const visual = createSvg("g", { class: "star-node-visual" });
+    visual.append(halo, core);
+    group.append(visual);
+    if (node.center) {
+      visual.append(createSvg("path", {
+        class: "star-center-mark",
+        d: "M0,-9 C2,-3 3,-2 9,0 C3,2 2,3 0,9 C-2,3 -3,2 -9,0 C-3,-2 -2,-3 0,-9Z",
+      }));
+    }
+    const label = createSvg("text", {
+      class: "star-label",
+      y: node.size + 18,
+      "text-anchor": "middle",
+      "aria-hidden": "true",
+    });
+    label.textContent = node.label;
+    group.append(label);
+    group.addEventListener("pointerenter", () => highlightStarNode(node.wordIndex));
+    group.addEventListener("pointerleave", clearStarHighlight);
+    group.addEventListener("click", () => { void navigateStarTo(node.wordIndex); });
+    group.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        void navigateStarTo(node.wordIndex);
+      }
+    });
+    node.element = group;
+    node.visualElement = visual;
+    node.labelElement = label;
+    nodeFragment.append(group);
+  }
+  dom.starNodeLayer.append(nodeFragment);
+  updateStarGeometry(0);
+  dom.starStage.classList.remove("is-arriving");
+  const hasGlobeArrival = animateStarArrival(graph, originPositions);
+  if (!hasGlobeArrival) {
+    void dom.starStage.offsetWidth;
+    dom.starStage.classList.add("is-arriving");
+    dom.starNodeLayer.firstElementChild?.addEventListener("animationend", () => {
+      dom.starStage.classList.remove("is-arriving");
+    }, { once: true });
+  }
+  updateStarStatus();
+  if (hasGlobeArrival) {
+    window.setTimeout(() => {
+      if (!state.starOpen || state.starGraph !== graph) return;
+      dom.starStage.classList.remove("is-transitioning");
+      state.starTransitioning = false;
+      startStarMotion();
+    }, STAR_ARRIVAL_DURATION_MS + STAR_ARRIVAL_STAGGER_MS + 90);
+  } else {
+    dom.starStage.classList.remove("is-transitioning");
+    state.starTransitioning = false;
+    startStarMotion();
+  }
+}
+
+function updateStarStatus(hoveredNode = null) {
+  const counts = dom.starStatus.querySelector(".star-status-counts");
+  if (!state.starGraph) {
+    counts.textContent = "—";
+    return;
+  }
+  if (hoveredNode) {
+    const type = hoveredNode.type === "classifier"
+      ? hoveredNode.alsoNoun ? "量词（亦作名词）" : "量词" : "名词";
+    counts.textContent = `${hoveredNode.label} · ${type} · 筛选时 Degree ${hoveredNode.prePruneDegree}`;
+    return;
+  }
+  counts.textContent = `${Math.max(0, state.starGraph.nodes.length - 1)} 个相邻词 · ${state.starGraph.edges.length} 条关系`;
+}
+
+function highlightStarNode(wordIndex) {
+  const graph = state.starGraph;
+  if (!graph || state.starTransitioning || state.starPan || graph.hoveredIndex === wordIndex) return;
+  graph.hoveredIndex = wordIndex;
+  stopStarMotion();
+  const connected = new Set([wordIndex, ...(graph.neighborByIndex.get(wordIndex) || [])]);
+  for (const node of graph.nodes) {
+    node.element.classList.toggle("is-hovered", node.wordIndex === wordIndex);
+    node.element.classList.toggle("is-neighbor", node.wordIndex !== wordIndex && connected.has(node.wordIndex));
+    node.element.classList.toggle("is-muted", !connected.has(node.wordIndex));
+    node.labelElement.classList.toggle("is-visible", connected.has(node.wordIndex));
+  }
+  if (graph.edgeBundles) {
+    graph.activeEdges = graph.edges.filter(
+      (edge) => edge.sourceIndex === wordIndex || edge.targetIndex === wordIndex,
+    );
+    for (const bundle of graph.edgeBundles) bundle.element.classList.add("is-muted");
+    updateBundledStarEdges(graph);
+  } else {
+    for (const edge of graph.edges) {
+      const active = edge.sourceIndex === wordIndex || edge.targetIndex === wordIndex;
+      edge.element.classList.toggle("is-active", active);
+      edge.element.classList.toggle("is-muted", !active);
+    }
+  }
+  updateStarStatus(graph.nodeByIndex.get(wordIndex));
+}
+
+function clearStarHighlight() {
+  if (!state.starGraph) return;
+  const wasHovered = state.starGraph.hoveredIndex != null;
+  state.starGraph.hoveredIndex = null;
+  for (const node of state.starGraph.nodes) {
+    node.element.classList.remove("is-hovered", "is-neighbor", "is-muted");
+    node.labelElement.classList.remove("is-visible");
+  }
+  if (state.starGraph.edgeBundles) {
+    state.starGraph.activeEdges = [];
+    for (const bundle of state.starGraph.edgeBundles) bundle.element.classList.remove("is-muted");
+    updateBundledStarEdges(state.starGraph);
+  } else {
+    for (const edge of state.starGraph.edges) {
+      edge.element.classList.remove("is-active", "is-muted");
+    }
+  }
+  updateStarStatus();
+  if (wasHovered) startStarMotion();
+}
+
+function applyStarViewport() {
+  const { x, y, scale } = state.starView;
+  dom.starViewport.setAttribute(
+    "transform",
+    `translate(${x} ${y}) translate(${STAR_CENTER_X} ${STAR_CENTER_Y}) scale(${scale}) translate(${-STAR_CENTER_X} ${-STAR_CENTER_Y})`,
+  );
+}
+
+function startStarPan(event) {
+  if (event.button !== 0 || state.starTransitioning) return;
+  // Pointer-down may be a click, not a drag. Keep its highlight and position
+  // stable until the gesture is known, so clicking cannot flash or miss a star.
+  stopStarMotion();
+  state.starPan = {
+    pointerId: event.pointerId,
+    clientX: event.clientX,
+    clientY: event.clientY,
+    originX: state.starView.x,
+    originY: state.starView.y,
+    moved: false,
+    captured: false,
+  };
+}
+
+function moveStarPan(event) {
+  if (!state.starPan || state.starPan.pointerId !== event.pointerId) return;
+  if ((event.buttons & 1) === 0) {
+    endStarPan(event);
+    return;
+  }
+  const rect = dom.starSvg.getBoundingClientRect();
+  const scaleX = STAR_VIEWBOX_WIDTH / Math.max(1, rect.width);
+  const scaleY = STAR_VIEWBOX_HEIGHT / Math.max(1, rect.height);
+  const screenDistance = Math.hypot(
+    event.clientX - state.starPan.clientX,
+    event.clientY - state.starPan.clientY,
+  );
+  if (screenDistance > 3) {
+    event.preventDefault();
+    if (!state.starPan.moved) clearStarHighlight();
+    state.starPan.moved = true;
+    if (!state.starPan.captured) {
+      dom.starSvg.setPointerCapture(event.pointerId);
+      state.starPan.captured = true;
+    }
+    dom.starStage.classList.add("is-panning");
+  }
+  state.starView.x = state.starPan.originX + (event.clientX - state.starPan.clientX) * scaleX;
+  state.starView.y = state.starPan.originY + (event.clientY - state.starPan.clientY) * scaleY;
+  applyStarViewport();
+}
+
+function endStarPan(event) {
+  if (!state.starPan || state.starPan.pointerId !== event.pointerId) return;
+  if (state.starPan.moved) state.starSuppressClickUntil = performance.now() + 120;
+  if (state.starPan.captured && dom.starSvg.hasPointerCapture(event.pointerId)) {
+    dom.starSvg.releasePointerCapture(event.pointerId);
+  }
+  state.starPan = null;
+  dom.starStage.classList.remove("is-panning");
+  startStarMotion();
+}
+
+function setWordTargetState(word) {
+  if (word !== state.wordTarget) {
+    state.wordPositionCache.clear();
+    state.wordLayoutTarget = word;
+  }
+  state.wordTarget = word;
+  const metadata = wordNodeById.get(word);
+  if (metadata?.type === "classifier") state.currentClassifier = word;
+}
+
+async function navigateStarTo(wordIndex) {
+  const graph = state.starGraph;
+  const node = graph?.nodeByIndex.get(wordIndex);
+  if (!node || node.center || state.starTransitioning || performance.now() < state.starSuppressClickUntil) return;
+  state.starTransitioning = true;
+  state.starPan = null;
+  dom.starStage.classList.remove("is-panning");
+  dom.starStage.classList.add("is-transitioning");
+  const renderToken = ++state.starRenderToken;
+  stopStarMotion();
+  try {
+    await ensureStarGraphBuffers(wordIndex);
+    if (!state.starOpen || renderToken !== state.starRenderToken) return;
+    const nextGraph = buildStarGraph(wordIndex);
+    assignStarLayout(nextGraph);
+    const nextIndices = new Set(nextGraph.nodes.map((nextNode) => nextNode.wordIndex));
+    // Continue from the actual hover brightness, not the unhighlighted CSS
+    // defaults. Otherwise clicking a dimmed neighborhood causes a bright flash.
+    const departureOpacities = new Map(graph.nodes.map((currentNode) => [
+      currentNode.wordIndex, Number(getComputedStyle(currentNode.element).opacity),
+    ]));
+    clearStarHighlight();
+    node.element.classList.add("is-selected");
+    const globeTurn = createStarGlobeTurn(node);
+    const originPositions = new Map();
+    for (const currentNode of graph.nodes) {
+      const destination = projectStarGlobePoint(currentNode, globeTurn, 1);
+      if (currentNode.wordIndex === wordIndex) {
+        destination.x = STAR_CENTER_X;
+        destination.y = STAR_CENTER_Y;
+        destination.depth = 1;
+      }
+      destination.opacity = currentNode.wordIndex === wordIndex ? 1
+        : starDepthOpacity(destination.depth, currentNode.center);
+      destination.size = currentNode.size;
+      originPositions.set(currentNode.wordIndex, destination);
+    }
+
+    const departureAnimations = [];
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      for (const currentNode of graph.nodes) {
+        const destination = originPositions.get(currentNode.wordIndex);
+        const quarterTurn = projectStarGlobePoint(currentNode, globeTurn, 0.34);
+        const threeQuarterTurn = projectStarGlobePoint(currentNode, globeTurn, 0.72);
+        const selected = currentNode.wordIndex === wordIndex;
+        const retained = nextIndices.has(currentNode.wordIndex);
+        const depthOpacity = (point, progress) => {
+          if (selected) return 1;
+          const retention = retained ? 1 : 1 - progress;
+          return starDepthOpacity(point.depth, currentNode.center) * retention;
+        };
+        const animation = currentNode.element.animate([
+          {
+            transform: absoluteStarTransform(currentNode),
+            opacity: departureOpacities.get(currentNode.wordIndex),
+            offset: 0,
+          },
+          {
+            transform: absoluteStarTransform(quarterTurn),
+            opacity: depthOpacity(quarterTurn, 0.34),
+            offset: 0.34,
+          },
+          {
+            transform: absoluteStarTransform(threeQuarterTurn),
+            opacity: depthOpacity(threeQuarterTurn, 0.72),
+            offset: 0.72,
+          },
+          {
+            transform: absoluteStarTransform(destination),
+            opacity: depthOpacity(destination, 1),
+            offset: 1,
+          },
+        ], {
+          duration: STAR_TURN_DURATION_MS,
+          easing: "cubic-bezier(0.34, 0.02, 0.18, 1)",
+          fill: "forwards",
+        });
+        departureAnimations.push(animation.finished.catch(() => undefined));
+      }
+      const edgeAnimation = dom.starEdgeLayer.animate(
+        [{ opacity: 1 }, { opacity: 0.04 }],
+        { duration: STAR_TURN_DURATION_MS, easing: "ease-in-out", fill: "forwards" },
+      );
+      departureAnimations.push(edgeAnimation.finished.catch(() => undefined));
+      const orbitAnimation = dom.starOrbitLayer.animate(
+        [{ opacity: 1 }, { opacity: 0.1 }],
+        { duration: STAR_TURN_DURATION_MS, easing: "ease-in-out", fill: "forwards" },
+      );
+      departureAnimations.push(orbitAnimation.finished.catch(() => undefined));
+    }
+    await Promise.all(departureAnimations);
+    if (!state.starOpen || renderToken !== state.starRenderToken) return;
+    setWordTargetState(node.label);
+    state.starGraph = nextGraph;
+    renderStarField(nextGraph, originPositions);
+    dom.starEmpty.classList.toggle("is-hidden", nextGraph.nodes.length !== 1);
+    if (nextGraph.nodes.length === 1) {
+      dom.starEmpty.textContent = "当前固定条件下没有保留可见邻居；中心词仍作为探索锚点保留。";
+    }
+  } catch (error) {
+    if (renderToken !== state.starRenderToken) return;
+    state.starTransitioning = false;
+    dom.starStage.classList.remove("is-transitioning");
+    dom.starEmpty.textContent = `中心切换失败：${error.message}`;
+    dom.starEmpty.classList.remove("is-hidden");
+    await renderStarMap();
+  }
+}
+
+async function renderStarMap() {
+  const renderToken = ++state.starRenderToken;
+  dom.starLoading.classList.remove("is-hidden");
+  dom.starEmpty.classList.add("is-hidden");
+  try {
+    const targetIndex = wordNodeById.get(state.wordTarget).index;
+    await ensureStarGraphBuffers(targetIndex);
+    if (!state.starOpen || renderToken !== state.starRenderToken) return;
+    const graph = buildStarGraph();
+    assignStarLayout(graph);
+    state.starGraph = graph;
+    renderStarField(graph);
+    if (graph.nodes.length === 1) {
+      dom.starEmpty.textContent = "当前固定条件下没有保留可见邻居；中心词仍作为探索锚点保留。";
+      dom.starEmpty.classList.remove("is-hidden");
+    }
+  } catch (error) {
+    if (renderToken !== state.starRenderToken) return;
+    state.starGraph = null;
+    dom.starOrbitLayer.replaceChildren();
+    dom.starEdgeLayer.replaceChildren();
+    dom.starNodeLayer.replaceChildren();
+    dom.starEmpty.textContent = `星图数据加载失败：${error.message}`;
+    dom.starEmpty.classList.remove("is-hidden");
+    updateStarStatus();
+  } finally {
+    if (renderToken === state.starRenderToken) dom.starLoading.classList.add("is-hidden");
+  }
+}
+
+function openStarMap() {
+  stopWordSimulation();
+  state.starOpen = true;
+  state.starView = { x: 0, y: 0, scale: 1 };
+  applyStarViewport();
+  document.body.classList.add("star-map-open");
+  dom.starMap.classList.remove("is-hidden");
+  dom.starMap.setAttribute("aria-hidden", "false");
+  dom.closeStarMap.focus();
+  void renderStarMap();
+}
+
+function closeStarMap() {
+  state.starOpen = false;
+  state.starRenderToken += 1;
+  state.starTransitioning = false;
+  state.starPan = null;
+  dom.starStage.classList.remove("is-panning");
+  stopStarMotion();
+  state.starGraph = null;
+  dom.starOrbitLayer.replaceChildren();
+  dom.starEdgeLayer.replaceChildren();
+  dom.starNodeLayer.replaceChildren();
+  dom.starLoading.classList.add("is-hidden");
+  dom.starEmpty.classList.add("is-hidden");
+  updateStarStatus();
+  dom.starRuleMenu.open = false;
+  dom.starMap.classList.add("is-hidden");
+  dom.starMap.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("star-map-open");
+  if (state.activeTab === "word") dom.classifierSearch.value = state.wordTarget;
+  else if (state.activeTab === "noun") dom.classifierSearch.value = state.nounCenter || state.currentClassifier;
+  else dom.classifierSearch.value = state.currentClassifier;
+  dom.openStarMap.focus();
+  void renderNetwork();
+}
+
 function assignRadialPositions(graph) {
   const rect = dom.graphStage.getBoundingClientRect();
   const farRadius = Math.max(130, Math.min(rect.width, rect.height) * 0.39);
@@ -1211,13 +2126,7 @@ function selectNoun(noun) {
 }
 
 function selectWordTarget(word) {
-  if (word !== state.wordTarget) {
-    state.wordPositionCache.clear();
-    state.wordLayoutTarget = word;
-  }
-  state.wordTarget = word;
-  const metadata = wordNodeById.get(word);
-  if (metadata?.type === "classifier") state.currentClassifier = word;
+  setWordTargetState(word);
   dom.classifierSearch.value = word; dom.searchMessage.textContent = "";
   void renderNetwork();
 }
@@ -1887,6 +2796,33 @@ function bindControls() {
     updateViewportTransform();
   }, { passive: false });
   new ResizeObserver(updateViewportTransform).observe(dom.graphStage);
+  dom.openStarMap.addEventListener("click", openStarMap);
+  dom.closeStarMap.addEventListener("click", closeStarMap);
+  dom.starSvg.addEventListener("pointerdown", startStarPan);
+  dom.starSvg.addEventListener("pointermove", moveStarPan);
+  dom.starSvg.addEventListener("pointerup", endStarPan);
+  dom.starSvg.addEventListener("pointercancel", endStarPan);
+  window.addEventListener("pointerup", endStarPan);
+  window.addEventListener("pointercancel", endStarPan);
+  dom.starSvg.addEventListener("lostpointercapture", (event) => {
+    if (state.starPan?.pointerId !== event.pointerId) return;
+    state.starPan = null;
+    dom.starStage.classList.remove("is-panning");
+  });
+  dom.starSvg.addEventListener("wheel", (event) => {
+    event.preventDefault();
+    state.starView.scale = clamp(state.starView.scale * (event.deltaY < 0 ? 1.1 : 0.9), 0.7, 2.2);
+    applyStarViewport();
+  }, { passive: false });
+  dom.starSvg.addEventListener("dblclick", () => {
+    state.starView = { x: 0, y: 0, scale: 1 };
+    applyStarViewport();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || !state.starOpen) return;
+    if (dom.starRuleMenu.open) dom.starRuleMenu.open = false;
+    else closeStarMap();
+  });
 }
 
 window.__NETWORK_DEBUG__ = {
@@ -1931,6 +2867,19 @@ window.__NETWORK_DEBUG__ = {
         pmi: edge.pmi, coOccurrence: edge.coOccurrence,
         relationType: edge.relationType, directed: edge.directed,
       })),
+      starMap: {
+        open: state.starOpen,
+        target: state.wordTarget,
+        fixedThresholds: {
+          pmiGreaterThan: STAR_PMI_THRESHOLD,
+          coOccurrenceGreaterThan: STAR_CO_THRESHOLD,
+          degreeGreaterThan: STAR_DEGREE_THRESHOLD,
+        },
+        visibleNodeCount: state.starGraph?.nodes.length || 0,
+        visibleEdgeCount: state.starGraph?.edges.length || 0,
+        labelsVisibleByDefault: false,
+        loadedChunkCount: wordChunkBuffers.size,
+      },
     };
   },
 };

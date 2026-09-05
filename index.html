@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="基于 valid_common 与原始共现矩阵的中文量词及词汇语义网络。">
   <title>中文量词语义网络</title>
-  <link rel="stylesheet" href="style.css?v=20260827-1">
+  <link rel="stylesheet" href="style.css?v=20260905-1">
   <script defer src="data/classifier_noun_data.js?v=20260823-1"></script>
   <script defer src="data/classifier_similarity_data.js?v=20260823-1"></script>
   <script defer src="data/word_network_nodes.js?v=20260827-2"></script>
   <script defer src="data/word_network_edges.js?v=20260827-2"></script>
   <script defer src="vendor/graphology.min.js?v=0.26.0"></script>
   <script defer src="vendor/graphology-library.min.js?v=0.26.0"></script>
-  <script defer src="app.js?v=20260827-2"></script>
+  <script defer src="app.js?v=20260905-1"></script>
 </head>
 <body>
   <div class="page-shell">
@@ -220,10 +220,85 @@
       </div>
     </main>
 
-    <footer>
+    <footer class="site-footer">
       <p>固定节点统计来自完整数据；词汇网络先限定合法关系，再按每个词的 NPMI_log_co_score Top 400 建立当前 1-hop 诱导子图。</p>
+      <button type="button" class="star-entry-button" id="openStarMap">
+        <span aria-hidden="true">✦</span>
+        进入星图测试
+      </button>
     </footer>
   </div>
+
+  <section class="star-map is-hidden" id="starMap" aria-hidden="true" aria-labelledby="starMapTitle">
+    <header class="star-map-header">
+      <button type="button" class="star-round-button" id="closeStarMap" aria-label="返回语义网络">
+        <span aria-hidden="true">←</span>
+      </button>
+      <div class="star-map-heading">
+        <p>FQL · SEMANTIC CONSTELLATION</p>
+        <h2 id="starMapTitle">词汇星图</h2>
+      </div>
+      <details class="star-rule-menu" id="starRuleMenu">
+        <summary aria-label="查看星图规则"><span aria-hidden="true">•••</span></summary>
+        <div>
+          <p class="star-rule-title">固定观察条件</p>
+          <p>共现次数 &gt; 100</p>
+          <p>PMI &gt; 3</p>
+          <p>Degree &gt; 2</p>
+          <small>Degree 按 1-hop 诱导子图的一次性修剪口径计算。条件不可修改；中心词作为探索锚点始终保留。</small>
+        </div>
+      </details>
+    </header>
+
+    <div class="star-stage" id="starStage">
+      <svg id="starSvg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="starMapTitle starMapDescription">
+        <desc id="starMapDescription">以当前词汇网络目标词为中心，可拖动、缩放并点击节点继续探索的语义星图。</desc>
+        <defs>
+          <radialGradient id="starCenterGradient">
+            <stop offset="0" stop-color="#fff8dc"></stop>
+            <stop offset="0.34" stop-color="#f2c791"></stop>
+            <stop offset="1" stop-color="#ad674a"></stop>
+          </radialGradient>
+          <radialGradient id="starNounGradient">
+            <stop offset="0" stop-color="#fff7d7"></stop>
+            <stop offset="0.45" stop-color="#d9ae73"></stop>
+            <stop offset="1" stop-color="#72543f"></stop>
+          </radialGradient>
+          <radialGradient id="starClassifierGradient">
+            <stop offset="0" stop-color="#e8fbff"></stop>
+            <stop offset="0.42" stop-color="#7fb4bd"></stop>
+            <stop offset="1" stop-color="#365966"></stop>
+          </radialGradient>
+        </defs>
+        <g id="starViewport">
+          <g id="starField">
+            <g id="starOrbitLayer">
+              <ellipse class="star-orbit" cx="600" cy="400" rx="175" ry="108"></ellipse>
+              <ellipse class="star-orbit" cx="600" cy="400" rx="310" ry="185" transform="rotate(-12 600 400)"></ellipse>
+              <ellipse class="star-orbit" cx="600" cy="400" rx="465" ry="265" transform="rotate(9 600 400)"></ellipse>
+            </g>
+            <g id="starEdgeLayer"></g>
+            <g id="starNodeLayer">
+              <g class="star-node center" transform="translate(600 400)">
+                <circle class="star-node-halo" r="42"></circle>
+                <circle class="star-node-core" r="15" fill="url(#starCenterGradient)"></circle>
+                <path class="star-center-mark" d="M0,-9 C2,-3 3,-2 9,0 C3,2 2,3 0,9 C-2,3 -3,2 -9,0 C-3,-2 -2,-3 0,-9Z"></path>
+              </g>
+            </g>
+          </g>
+        </g>
+      </svg>
+      <div class="star-loading is-hidden" id="starLoading" role="status" aria-live="polite">
+        <span aria-hidden="true"></span>
+        <p>正在汇聚当前词语的星轨……</p>
+      </div>
+      <div class="star-empty is-hidden" id="starEmpty" role="status"></div>
+      <div class="star-status-card" id="starStatus" aria-live="polite">
+        <p class="star-status-counts">—</p>
+        <p>悬停查看相邻词 · 点击星体切换中心 · 拖动星体或空白处移动星图</p>
+      </div>
+    </div>
+  </section>
 
   <noscript>此网页需要启用 JavaScript 才能显示交互网络。</noscript>
 </body>
