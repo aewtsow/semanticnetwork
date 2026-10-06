@@ -1,0 +1,84 @@
+{
+  "date": "2026-10-06",
+  "decoder": "browser DecompressionStream + SHA256",
+  "sampledRows": 586,
+  "decodedBytes": 217813856,
+  "packedBytes": 99541570,
+  "byteExact": true,
+  "malformedAndCanceledRequestsRejected": true,
+  "ieeeBitPatternsPreserved": true,
+  "cases": [
+    {
+      "word": "一棵",
+      "mode": "classifier",
+      "limit": 50,
+      "nodes": 51,
+      "edges": 331,
+      "graphAndLayoutIdentical": true
+    },
+    {
+      "word": "一棵",
+      "mode": "noun",
+      "limit": 50,
+      "nodes": 51,
+      "edges": 335,
+      "graphAndLayoutIdentical": true
+    },
+    {
+      "word": "一棵",
+      "mode": "word",
+      "limit": 50,
+      "nodes": 51,
+      "edges": 342,
+      "graphAndLayoutIdentical": true
+    },
+    {
+      "word": "树",
+      "mode": "noun",
+      "limit": 50,
+      "nodes": 5,
+      "edges": 10,
+      "graphAndLayoutIdentical": true
+    },
+    {
+      "word": "树",
+      "mode": "word",
+      "limit": 50,
+      "nodes": 51,
+      "edges": 338,
+      "graphAndLayoutIdentical": true
+    },
+    {
+      "word": "客厅",
+      "mode": "noun",
+      "limit": 50,
+      "nodes": 2,
+      "edges": 1,
+      "graphAndLayoutIdentical": true
+    },
+    {
+      "word": "客厅",
+      "mode": "word",
+      "limit": 50,
+      "nodes": 51,
+      "edges": 337,
+      "graphAndLayoutIdentical": true
+    },
+    {
+      "word": "客厅",
+      "mode": "word",
+      "limit": 200,
+      "nodes": 201,
+      "edges": 1476,
+      "graphAndLayoutIdentical": true
+    },
+    {
+      "word": "客厅",
+      "mode": "word",
+      "limit": 400,
+      "nodes": 401,
+      "edges": 2977,
+      "graphAndLayoutIdentical": true
+    }
+  ]
+}

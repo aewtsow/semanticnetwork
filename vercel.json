@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "python3 build_release_site.py",
+  "outputDirectory": "public",
+  "installCommand": "",
+  "headers": [
+    {
+      "source": "/data/semantic_v2/rows-srg-v1/:path*",
+      "headers": [{"key": "Cache-Control", "value": "public, max-age=31536000, immutable"}]
+    },
+    {
+      "source": "/data/semantic_v2/manifest.json",
+      "headers": [{"key": "Cache-Control", "value": "no-cache"}]
+    }
+  ]
+}

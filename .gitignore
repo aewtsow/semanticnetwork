@@ -11,3 +11,5 @@ Thumbs.db
 data/semantic_v2/progress.json
 test_artifacts/*
 !test_artifacts/semantic_v2/
+public/
+.vercel/

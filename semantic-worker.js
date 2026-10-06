@@ -1,14 +1,19 @@
 'use strict';
-importScripts('vendor/graphology-worker-adapter.js?v=20260929-3','semantic-core.js?v=20261005-1');
+importScripts('vendor/graphology-worker-adapter.js?v=20260929-3','semantic-core.js?v=20261005-1','semantic-row-codec.js?v=20261006-1');
 let nodes,pairs,manifest,controller,serial=0,lastGraph=null;
 const cache=new Map();let cacheBytes=0;
 const CACHE_LIMIT=96*1024*1024;
 function trim(){while(cacheBytes>CACHE_LIMIT&&cache.size){const key=cache.keys().next().value;cacheBytes-=cache.get(key).bytes;cache.delete(key);}}
 async function row(index,signal){
   if(cache.has(index)){const r=cache.get(index);cache.delete(index);cache.set(index,r);return r;}
-  const response=await fetch(`data/semantic_v2/rows/${index}.bin?v=${manifest.version}`,{signal});
-  if(!response.ok)throw Error(`“${nodes[index].id}”的精确相似性尚未生成。请运行 prepare_semantic_v2.py --all 后重试；不会用旧相似性替代。`);
-  const buffer=await response.arrayBuffer();
+  const rowPath=(manifest.rowsURL||'rows/{index}.bin').replace('{index}',String(index));
+  const response=await fetch(`data/semantic_v2/${rowPath}?v=${encodeURIComponent(manifest.transport?.version||manifest.version)}`,{signal});
+  if(!response.ok)throw Error(`“${nodes[index].id}”的数据读取失败（HTTP ${response.status}）。请重试或检查该版本数据是否发布完整；不会用旧相似性替代。`);
+  let buffer=await response.arrayBuffer();
+  if(manifest.transport){
+    if(manifest.transport.codec!=='snr1-shuffle-gzip-f64')throw Error('不支持的数据压缩格式');
+    buffer=await SemanticRowCodec.decode(buffer,manifest,signal);
+  }
   if(buffer.byteLength!==manifest.rowBytes)throw Error('新版数据长度不匹配，请检查数据版本');
   const n=nodes.length,r={sim:new Float64Array(buffer,0,n),co:new Float64Array(buffer,n*8,n),bytes:buffer.byteLength};
   cache.set(index,r);cacheBytes+=r.bytes;trim();return r;

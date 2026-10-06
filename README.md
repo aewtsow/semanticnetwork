@@ -4,7 +4,8 @@
 
 - `main`：保持现有线上旧版，避免自动部署一个缺少新版数据的网页。
 - [`archive/original-20260905`](https://github.com/aewtsow/semanticnetwork/tree/archive/original-20260905)：同步前旧版的完整快照，对应提交 [`ba651c2`](https://github.com/aewtsow/semanticnetwork/commit/ba651c29b01d50869ec65eadb3b888e57dd2a98a)，包含原三图、星图及原有数据。
-- `semantic-v2-20261005`：本地验收过的新版代码、数据生成脚本、方法说明和测试结果；入口为 `index.html`，旧版对照为 `legacy.html`。
+- [`archive/pre-lossless-20261006`](https://github.com/aewtsow/semanticnetwork/tree/archive/pre-lossless-20261006)：本次无损传输改造前的新版代码快照，对应 `071c2cd`；完整原始数据另有本地 ZIP 存档。
+- `preview/lossless-20261006`：完整双精度数据的无损压缩与独立预览分支；入口为 `index.html`，旧版对照为 `legacy.html`，不合并 main、不修改正式站点。
 
 新版统一节点共现面积、完整语境 PPMI 余弦目标距离和 PMI 明暗。
 弱连接采用固定的 `sigmoid((PMI − 5) / 2)²` 白到深绿色阶，不因此移除关系。
@@ -12,9 +13,16 @@
 
 ## 本地运行与数据依赖
 
-**本分支不是可直接部署的完整数据包。** 完整精确相似性有 23,231 个二进制行，合计
-8,634,869,776 字节（约 8.63 GB），不放进 Git 历史，也不会退回旧近似值冒充新版结果。
+完整精确相似性有 23,231 个二进制行，合计 8,634,869,776 字节（约 8.63 GB）。
+它们不放进 Git 历史，也不会退回旧近似值冒充新版结果。已生成 23 个无损发布分包，
+合计 3,887,984,640 字节（约 3.89 GB），全部原始行逐字节还原通过。
 `data/semantic_v2/manifest.json` 记录源校验、精度、固定标尺和行格式。
+
+线上构建使用 GitHub Release `semantic-data-v2-lossless-20261006` 的附件，版本与校验值由
+`data/semantic_v2/release-lock.json` 固定。`vercel.json` 自动执行下载、校验与组装，浏览器
+Worker 按需解压，不改变数据精度、筛选、聚类或布局。Release 完整上传后才可部署。
+本分支有 Production 构建保护，只用于 Preview；配置存在不等于线上验收已完成。
+操作方法见 [无损发布与预览说明](RELEASE_DEPLOYMENT.md)。
 
 已有本地数据时，将同版本行文件保留/恢复至 `data/semantic_v2/rows/`，再执行：
 
@@ -26,7 +34,7 @@ python serve_semantic_v2.py --port 8765
 用户现有 Windows 工作区也可使用 `run-semantic-v2.ps1 serve`，它使用 codex conda 环境并把临时目录放在工作区。
 
 只有代码、没有完整行文件时，新图会明确报数据不可用；`legacy.html` 和原星图仍使用仓库中的旧数据。
-正式上线新版前，需要另行安排完整行数据托管，并验证加载地址、跨域访问及访问成本；本次源代码同步不改变线上站点。
+正式上线新版前仍需验收预览及账户存储/流量额度，本次改造不改变正式站点。
 
 从头生成还需要未随仓库公开的原语料与已有完整关系缓存，不是仅克隆仓库即可执行：
 

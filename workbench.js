@@ -23,7 +23,7 @@
   }
   let pendingBuild;
   function makeWorker(){
-    const worker=new Worker('semantic-worker.js?v=20261005-1');
+    const worker=new Worker('semantic-worker.js?v=20261006-1');
     state.worker=worker;
     worker.postMessage({type:'init',nodes,pairs,manifest:state.manifest});
     worker.onmessage=({data})=>{
