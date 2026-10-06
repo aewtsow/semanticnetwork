@@ -1,0 +1,3770 @@
+{
+  "version": "ppmi-full-context-v2-20260929",
+  "passed": true,
+  "reports": [
+    {
+      "word": "一棵",
+      "mode": "classifier",
+      "limit": 50,
+      "candidates": 112,
+      "nodes": 51,
+      "edges": 331,
+      "peripheral": 1225,
+      "communities": 4,
+      "overlaps": 0,
+      "within": 0.23285286118341317,
+      "between": 0.1958600945489516,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.19185864444942824,
+        "betweenMean": 0.1235105236829366,
+        "withinCount": 300,
+        "betweenCount": 925,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 119,
+      "seedPairAgreement": 0.9407020408163266,
+      "relativeDistanceError": 0.24383650132158968,
+      "trials": [
+        {
+          "type": "classifier",
+          "seed": 0,
+          "modularity": 0.3977595674262405
+        },
+        {
+          "type": "classifier",
+          "seed": 1,
+          "modularity": 0.3970891933338313
+        },
+        {
+          "type": "classifier",
+          "seed": 2,
+          "modularity": 0.39927767271330905
+        },
+        {
+          "type": "classifier",
+          "seed": 3,
+          "modularity": 0.3974723267855034
+        },
+        {
+          "type": "classifier",
+          "seed": 4,
+          "modularity": 0.39927767271330905
+        }
+      ],
+      "elapsedMs": 159.5278,
+      "topNeighbors": [
+        {
+          "word": "一株",
+          "similarity": 0.5783426821183216,
+          "co": 327,
+          "pmi": 3.982762276948283
+        },
+        {
+          "word": "一枝",
+          "similarity": 0.3517990912095739,
+          "co": 61.5,
+          "pmi": 2.833193073986762
+        },
+        {
+          "word": "一颗",
+          "similarity": 0.32981772661346204,
+          "co": 882.5,
+          "pmi": 1.6183955491993294
+        },
+        {
+          "word": "一朵",
+          "similarity": 0.3239089389564222,
+          "co": 514.5,
+          "pmi": 2.690029431070596
+        },
+        {
+          "word": "一片",
+          "similarity": 0.31345159805013983,
+          "co": 1448.5,
+          "pmi": 2.2612318830854714
+        },
+        {
+          "word": "一束",
+          "similarity": 0.268866434184256,
+          "co": 53.5,
+          "pmi": 1.1628670549748918
+        },
+        {
+          "word": "一根",
+          "similarity": 0.24135043827037037,
+          "co": 201.5,
+          "pmi": 1.307923339543791
+        },
+        {
+          "word": "一处",
+          "similarity": 0.21296360353347316,
+          "co": 660.5,
+          "pmi": 3.4510668262088617
+        },
+        {
+          "word": "一缕",
+          "similarity": 0.19893295938472563,
+          "co": 101,
+          "pmi": 2.0210603411151142
+        },
+        {
+          "word": "一粒",
+          "similarity": 0.19230331859390806,
+          "co": 881,
+          "pmi": 3.7818979855981616
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": [
+        {
+          "word": "一株",
+          "legacyCosine": 0.6466425132096881
+        },
+        {
+          "word": "一颗",
+          "legacyCosine": 0.2801555796713287
+        },
+        {
+          "word": "一枝",
+          "legacyCosine": 0.2026015665268416
+        },
+        {
+          "word": "一朵",
+          "legacyCosine": 0.14425786831251242
+        },
+        {
+          "word": "一束",
+          "legacyCosine": 0.1307145188680811
+        },
+        {
+          "word": "一根",
+          "legacyCosine": 0.10152163923796087
+        },
+        {
+          "word": "一盘",
+          "legacyCosine": 0.05832556553890693
+        },
+        {
+          "word": "一片",
+          "legacyCosine": 0.05468563779822912
+        },
+        {
+          "word": "一瓣",
+          "legacyCosine": 0.04087365309209937
+        },
+        {
+          "word": "一把",
+          "legacyCosine": 0.03895063752101555
+        }
+      ]
+    },
+    {
+      "word": "一棵",
+      "mode": "noun",
+      "limit": 50,
+      "candidates": 532,
+      "nodes": 51,
+      "edges": 335,
+      "peripheral": 1225,
+      "communities": 3,
+      "overlaps": 0,
+      "within": 0.3454066841867716,
+      "between": 0.324565034548583,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.30520478589407984,
+        "betweenMean": 0.25480334082793876,
+        "withinCount": 438,
+        "betweenCount": 787,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 288,
+      "seedPairAgreement": 0.9694367346938776,
+      "relativeDistanceError": 0.2621292076831702,
+      "trials": [
+        {
+          "type": "noun",
+          "seed": 0,
+          "modularity": 0.388715375309313
+        },
+        {
+          "type": "noun",
+          "seed": 1,
+          "modularity": 0.384816856371462
+        },
+        {
+          "type": "noun",
+          "seed": 2,
+          "modularity": 0.38481685637146185
+        },
+        {
+          "type": "noun",
+          "seed": 3,
+          "modularity": 0.388715375309313
+        },
+        {
+          "type": "noun",
+          "seed": 4,
+          "modularity": 0.3887153753093131
+        }
+      ],
+      "elapsedMs": 111.33799999999997,
+      "topNeighbors": [
+        {
+          "word": "树",
+          "similarity": 0.4902485427393294,
+          "co": 57272,
+          "pmi": 6.850867566796445
+        },
+        {
+          "word": "大树",
+          "similarity": 0.4070689874727368,
+          "co": 27899,
+          "pmi": 7.797992661898336
+        },
+        {
+          "word": "一棵树",
+          "similarity": 0.4061376130762132,
+          "co": 669,
+          "pmi": 4.16409156280039
+        },
+        {
+          "word": "月季",
+          "similarity": 0.3971442891881976,
+          "co": 501,
+          "pmi": 4.4644212484092485
+        },
+        {
+          "word": "桃树",
+          "similarity": 0.39085898217338916,
+          "co": 1793,
+          "pmi": 6.840698492405204
+        },
+        {
+          "word": "树木",
+          "similarity": 0.3803673549043582,
+          "co": 905,
+          "pmi": 4.659785044973274
+        },
+        {
+          "word": "新芽",
+          "similarity": 0.3753370645584399,
+          "co": 120,
+          "pmi": 3.887547299736204
+        },
+        {
+          "word": "三角梅",
+          "similarity": 0.37528536262875617,
+          "co": 236,
+          "pmi": 4.991942291818178
+        },
+        {
+          "word": "花草",
+          "similarity": 0.37363768197007463,
+          "co": 134,
+          "pmi": 2.587598299009585
+        },
+        {
+          "word": "盆栽",
+          "similarity": 0.3682189450662109,
+          "co": 385,
+          "pmi": 4.143706206769952
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": null
+    },
+    {
+      "word": "一棵",
+      "mode": "word",
+      "limit": 50,
+      "candidates": 644,
+      "nodes": 51,
+      "edges": 342,
+      "peripheral": 1133,
+      "communities": 4,
+      "overlaps": 0,
+      "within": 0.3504495541578638,
+      "between": 0.3247269629424142,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.31080894462938796,
+        "betweenMean": 0.25680160017208714,
+        "withinCount": 368,
+        "betweenCount": 673,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 235,
+      "seedPairAgreement": 0.9944347826086956,
+      "relativeDistanceError": 0.27167992937731417,
+      "trials": [
+        {
+          "type": "classifier",
+          "seed": 0,
+          "modularity": -2.220446049250313e-16
+        },
+        {
+          "type": "classifier",
+          "seed": 1,
+          "modularity": 2.220446049250313e-16
+        },
+        {
+          "type": "classifier",
+          "seed": 2,
+          "modularity": 2.220446049250313e-16
+        },
+        {
+          "type": "classifier",
+          "seed": 3,
+          "modularity": 2.220446049250313e-16
+        },
+        {
+          "type": "classifier",
+          "seed": 4,
+          "modularity": 2.220446049250313e-16
+        },
+        {
+          "type": "noun",
+          "seed": 0,
+          "modularity": 0.40320405539038806
+        },
+        {
+          "type": "noun",
+          "seed": 1,
+          "modularity": 0.4032040553903882
+        },
+        {
+          "type": "noun",
+          "seed": 2,
+          "modularity": 0.40090838264741546
+        },
+        {
+          "type": "noun",
+          "seed": 3,
+          "modularity": 0.40320405539038817
+        },
+        {
+          "type": "noun",
+          "seed": 4,
+          "modularity": 0.40320405539038817
+        }
+      ],
+      "elapsedMs": 84.74789999999996,
+      "topNeighbors": [
+        {
+          "word": "一株",
+          "similarity": 0.5783426821183216,
+          "co": 327,
+          "pmi": 3.982762276948283
+        },
+        {
+          "word": "树",
+          "similarity": 0.4902485427393294,
+          "co": 57272,
+          "pmi": 6.850867566796445
+        },
+        {
+          "word": "大树",
+          "similarity": 0.4070689874727368,
+          "co": 27899,
+          "pmi": 7.797992661898336
+        },
+        {
+          "word": "一棵树",
+          "similarity": 0.4061376130762132,
+          "co": 669,
+          "pmi": 4.16409156280039
+        },
+        {
+          "word": "月季",
+          "similarity": 0.3971442891881976,
+          "co": 501,
+          "pmi": 4.4644212484092485
+        },
+        {
+          "word": "桃树",
+          "similarity": 0.39085898217338916,
+          "co": 1793,
+          "pmi": 6.840698492405204
+        },
+        {
+          "word": "树木",
+          "similarity": 0.3803673549043582,
+          "co": 905,
+          "pmi": 4.659785044973274
+        },
+        {
+          "word": "新芽",
+          "similarity": 0.3753370645584399,
+          "co": 120,
+          "pmi": 3.887547299736204
+        },
+        {
+          "word": "三角梅",
+          "similarity": 0.37528536262875617,
+          "co": 236,
+          "pmi": 4.991942291818178
+        },
+        {
+          "word": "花草",
+          "similarity": 0.37363768197007463,
+          "co": 134,
+          "pmi": 2.587598299009585
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": null
+    },
+    {
+      "word": "一张",
+      "mode": "classifier",
+      "limit": 50,
+      "candidates": 112,
+      "nodes": 51,
+      "edges": 317,
+      "peripheral": 1225,
+      "communities": 5,
+      "overlaps": 0,
+      "within": 0.21551686357852173,
+      "between": 0.18085383005121367,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.17684764684746687,
+        "betweenMean": 0.11242720842775578,
+        "withinCount": 237,
+        "betweenCount": 988,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 152,
+      "seedPairAgreement": 0.9732244897959184,
+      "relativeDistanceError": 0.276344648396259,
+      "trials": [
+        {
+          "type": "classifier",
+          "seed": 0,
+          "modularity": 0.3726033368860354
+        },
+        {
+          "type": "classifier",
+          "seed": 1,
+          "modularity": 0.38105356141783747
+        },
+        {
+          "type": "classifier",
+          "seed": 2,
+          "modularity": 0.38274888775515636
+        },
+        {
+          "type": "classifier",
+          "seed": 3,
+          "modularity": 0.3818846787829544
+        },
+        {
+          "type": "classifier",
+          "seed": 4,
+          "modularity": 0.38274888775515636
+        }
+      ],
+      "elapsedMs": 73.63530000000003,
+      "topNeighbors": [
+        {
+          "word": "一幅",
+          "similarity": 0.2353645517074256,
+          "co": 921,
+          "pmi": 0.8365514112407089
+        },
+        {
+          "word": "一发",
+          "similarity": 0.22993932698646202,
+          "co": 370,
+          "pmi": 0.06478145728584844
+        },
+        {
+          "word": "一页",
+          "similarity": 0.17896818374522636,
+          "co": 656.5,
+          "pmi": 0.8534540664630558
+        },
+        {
+          "word": "一本",
+          "similarity": 0.17584187375835084,
+          "co": 2289,
+          "pmi": 0.6981817295441491
+        },
+        {
+          "word": "一卷",
+          "similarity": 0.15839355978320427,
+          "co": 198.5,
+          "pmi": 1.0994356115090969
+        },
+        {
+          "word": "一块",
+          "similarity": 0.154522236043902,
+          "co": 2495.5,
+          "pmi": 0.3394698244619565
+        },
+        {
+          "word": "一圈",
+          "similarity": 0.15008834800165508,
+          "co": 871.5,
+          "pmi": -0.4311220392053405
+        },
+        {
+          "word": "一首",
+          "similarity": 0.14998723230509486,
+          "co": 1370.5,
+          "pmi": -0.3483616083246166
+        },
+        {
+          "word": "一趟",
+          "similarity": 0.1477078191842228,
+          "co": 609,
+          "pmi": -0.23498768677093326
+        },
+        {
+          "word": "一期",
+          "similarity": 0.14457347493422124,
+          "co": 177,
+          "pmi": -1.2122984969019814
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": [
+        {
+          "word": "一幅",
+          "legacyCosine": 0.19324522874464867
+        },
+        {
+          "word": "一页",
+          "legacyCosine": 0.12556620738760882
+        },
+        {
+          "word": "一卷",
+          "legacyCosine": 0.1163294676661756
+        },
+        {
+          "word": "一份",
+          "legacyCosine": 0.07283981377525986
+        },
+        {
+          "word": "一床",
+          "legacyCosine": 0.06290856796597966
+        },
+        {
+          "word": "一封",
+          "legacyCosine": 0.05307782785283208
+        },
+        {
+          "word": "一本",
+          "legacyCosine": 0.04917359407505115
+        },
+        {
+          "word": "一块",
+          "legacyCosine": 0.045119916926510815
+        },
+        {
+          "word": "一个",
+          "legacyCosine": 0.030792323756517397
+        },
+        {
+          "word": "一把",
+          "legacyCosine": 0.029956360071766903
+        }
+      ]
+    },
+    {
+      "word": "一张",
+      "mode": "noun",
+      "limit": 50,
+      "candidates": 959,
+      "nodes": 51,
+      "edges": 306,
+      "peripheral": 1225,
+      "communities": 4,
+      "overlaps": 0,
+      "within": 0.263893327922618,
+      "between": 0.23828882177011096,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.22515725171451312,
+        "betweenMean": 0.13682364080932216,
+        "withinCount": 354,
+        "betweenCount": 871,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 707,
+      "seedPairAgreement": 0.9858938775510204,
+      "relativeDistanceError": 0.2594610228453551,
+      "trials": [
+        {
+          "type": "noun",
+          "seed": 0,
+          "modularity": 0.46237022305353426
+        },
+        {
+          "type": "noun",
+          "seed": 1,
+          "modularity": 0.46237022305353437
+        },
+        {
+          "type": "noun",
+          "seed": 2,
+          "modularity": 0.467624183438046
+        },
+        {
+          "type": "noun",
+          "seed": 3,
+          "modularity": 0.46237022305353437
+        },
+        {
+          "type": "noun",
+          "seed": 4,
+          "modularity": 0.46237022305353426
+        }
+      ],
+      "elapsedMs": 72.2921,
+      "topNeighbors": [
+        {
+          "word": "照片",
+          "similarity": 0.33169915340351874,
+          "co": 1153921,
+          "pmi": 4.6045730337469415
+        },
+        {
+          "word": "画",
+          "similarity": 0.2933158675646759,
+          "co": 29763,
+          "pmi": 2.243392106029706
+        },
+        {
+          "word": "图",
+          "similarity": 0.2929193159454414,
+          "co": 270206,
+          "pmi": 3.5427291432962207
+        },
+        {
+          "word": "海报",
+          "similarity": 0.2893614077942176,
+          "co": 50448,
+          "pmi": 4.291550446283743
+        },
+        {
+          "word": "明信片",
+          "similarity": 0.2738143689191975,
+          "co": 25750,
+          "pmi": 4.006473689395008
+        },
+        {
+          "word": "原图",
+          "similarity": 0.2612770470141433,
+          "co": 5590,
+          "pmi": 3.058063335564148
+        },
+        {
+          "word": "合照",
+          "similarity": 0.2590750986039421,
+          "co": 45646,
+          "pmi": 4.100059480330618
+        },
+        {
+          "word": "纸",
+          "similarity": 0.250217530303446,
+          "co": 111485,
+          "pmi": 4.622737768608074
+        },
+        {
+          "word": "合影",
+          "similarity": 0.24960467132384576,
+          "co": 30411,
+          "pmi": 3.8000924409472265
+        },
+        {
+          "word": "证件照",
+          "similarity": 0.24713496903500987,
+          "co": 6884,
+          "pmi": 3.793651392555656
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": null
+    },
+    {
+      "word": "一张",
+      "mode": "word",
+      "limit": 50,
+      "candidates": 1071,
+      "nodes": 51,
+      "edges": 309,
+      "peripheral": 1147,
+      "communities": 5,
+      "overlaps": 0,
+      "within": 0.264696915869215,
+      "between": 0.2299068836019648,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.22554688044347723,
+        "betweenMean": 0.14216550229770938,
+        "withinCount": 314,
+        "betweenCount": 815,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 639,
+      "seedPairAgreement": 1,
+      "relativeDistanceError": 0.27205026901153284,
+      "trials": [
+        {
+          "type": "classifier",
+          "seed": 0,
+          "modularity": 0
+        },
+        {
+          "type": "classifier",
+          "seed": 1,
+          "modularity": 0
+        },
+        {
+          "type": "classifier",
+          "seed": 2,
+          "modularity": 0
+        },
+        {
+          "type": "classifier",
+          "seed": 3,
+          "modularity": 0
+        },
+        {
+          "type": "classifier",
+          "seed": 4,
+          "modularity": 0
+        },
+        {
+          "type": "noun",
+          "seed": 0,
+          "modularity": 0.4292876838004906
+        },
+        {
+          "type": "noun",
+          "seed": 1,
+          "modularity": 0.42928768380049065
+        },
+        {
+          "type": "noun",
+          "seed": 2,
+          "modularity": 0.4292876838004907
+        },
+        {
+          "type": "noun",
+          "seed": 3,
+          "modularity": 0.4292876838004907
+        },
+        {
+          "type": "noun",
+          "seed": 4,
+          "modularity": 0.42928768380049054
+        }
+      ],
+      "elapsedMs": 53.311500000000024,
+      "topNeighbors": [
+        {
+          "word": "照片",
+          "similarity": 0.33169915340351874,
+          "co": 1153921,
+          "pmi": 4.6045730337469415
+        },
+        {
+          "word": "画",
+          "similarity": 0.2933158675646759,
+          "co": 29763,
+          "pmi": 2.243392106029706
+        },
+        {
+          "word": "图",
+          "similarity": 0.2929193159454414,
+          "co": 270206,
+          "pmi": 3.5427291432962207
+        },
+        {
+          "word": "海报",
+          "similarity": 0.2893614077942176,
+          "co": 50448,
+          "pmi": 4.291550446283743
+        },
+        {
+          "word": "明信片",
+          "similarity": 0.2738143689191975,
+          "co": 25750,
+          "pmi": 4.006473689395008
+        },
+        {
+          "word": "原图",
+          "similarity": 0.2612770470141433,
+          "co": 5590,
+          "pmi": 3.058063335564148
+        },
+        {
+          "word": "合照",
+          "similarity": 0.2590750986039421,
+          "co": 45646,
+          "pmi": 4.100059480330618
+        },
+        {
+          "word": "纸",
+          "similarity": 0.250217530303446,
+          "co": 111485,
+          "pmi": 4.622737768608074
+        },
+        {
+          "word": "合影",
+          "similarity": 0.24960467132384576,
+          "co": 30411,
+          "pmi": 3.8000924409472265
+        },
+        {
+          "word": "证件照",
+          "similarity": 0.24713496903500987,
+          "co": 6884,
+          "pmi": 3.793651392555656
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": null
+    },
+    {
+      "word": "一个",
+      "mode": "classifier",
+      "limit": 50,
+      "candidates": 112,
+      "nodes": 51,
+      "edges": 320,
+      "peripheral": 1225,
+      "communities": 4,
+      "overlaps": 0,
+      "within": 0.2021352337079764,
+      "between": 0.1718409942378048,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.15588399439458184,
+        "betweenMean": 0.10460907344553452,
+        "withinCount": 320,
+        "betweenCount": 905,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 252,
+      "seedPairAgreement": 0.971265306122449,
+      "relativeDistanceError": 0.25906454977053195,
+      "trials": [
+        {
+          "type": "classifier",
+          "seed": 0,
+          "modularity": 0.3916654097075607
+        },
+        {
+          "type": "classifier",
+          "seed": 1,
+          "modularity": 0.38725183041553446
+        },
+        {
+          "type": "classifier",
+          "seed": 2,
+          "modularity": 0.3865390423907622
+        },
+        {
+          "type": "classifier",
+          "seed": 3,
+          "modularity": 0.3865390423907622
+        },
+        {
+          "type": "classifier",
+          "seed": 4,
+          "modularity": 0.3865390423907622
+        }
+      ],
+      "elapsedMs": 69.25509999999997,
+      "topNeighbors": [
+        {
+          "word": "一位",
+          "similarity": 0.2649435564349934,
+          "co": 33570,
+          "pmi": -0.49091716275651065
+        },
+        {
+          "word": "一名",
+          "similarity": 0.21895341296663462,
+          "co": 10983.5,
+          "pmi": -1.1888174732724741
+        },
+        {
+          "word": "一只",
+          "similarity": 0.18012771559027374,
+          "co": 63895,
+          "pmi": -0.24072639484852704
+        },
+        {
+          "word": "一枚",
+          "similarity": 0.14895395138823275,
+          "co": 6358.5,
+          "pmi": -1.460373164811846
+        },
+        {
+          "word": "一间",
+          "similarity": 0.14508990857041903,
+          "co": 10720.5,
+          "pmi": 0.7359517029161554
+        },
+        {
+          "word": "一处",
+          "similarity": 0.14442360717065092,
+          "co": 6052.5,
+          "pmi": -0.16354776667865223
+        },
+        {
+          "word": "一块",
+          "similarity": 0.1411388101511797,
+          "co": 33029,
+          "pmi": 0.005109325605172856
+        },
+        {
+          "word": "一家",
+          "similarity": 0.1328700506829948,
+          "co": 33633,
+          "pmi": -0.34124837388739004
+        },
+        {
+          "word": "一座",
+          "similarity": 0.13119920742669988,
+          "co": 92692.5,
+          "pmi": 1.4195737525669498
+        },
+        {
+          "word": "一根",
+          "similarity": 0.1295730608107574,
+          "co": 31572,
+          "pmi": 0.5323157312479989
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": [
+        {
+          "word": "一位",
+          "legacyCosine": 0.2423842976316727
+        },
+        {
+          "word": "一名",
+          "legacyCosine": 0.1985576667341706
+        },
+        {
+          "word": "一处",
+          "legacyCosine": 0.09946788888456619
+        },
+        {
+          "word": "一间",
+          "legacyCosine": 0.06763613143534712
+        },
+        {
+          "word": "一座",
+          "legacyCosine": 0.06571579216734559
+        },
+        {
+          "word": "一段",
+          "legacyCosine": 0.05320052257368465
+        },
+        {
+          "word": "一块",
+          "legacyCosine": 0.05319135505327241
+        },
+        {
+          "word": "一则",
+          "legacyCosine": 0.052312290225980856
+        },
+        {
+          "word": "一只",
+          "legacyCosine": 0.05046319311275112
+        },
+        {
+          "word": "一颗",
+          "legacyCosine": 0.047756969793181725
+        }
+      ]
+    },
+    {
+      "word": "一个",
+      "mode": "noun",
+      "limit": 50,
+      "candidates": 4933,
+      "nodes": 51,
+      "edges": 338,
+      "peripheral": 1225,
+      "communities": 4,
+      "overlaps": 0,
+      "within": 0.2918991238032755,
+      "between": 0.23989326390298443,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.2552089624324081,
+        "betweenMean": 0.14604455889477336,
+        "withinCount": 310,
+        "betweenCount": 915,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 876,
+      "seedPairAgreement": 0.993208163265306,
+      "relativeDistanceError": 0.2820899124182687,
+      "trials": [
+        {
+          "type": "noun",
+          "seed": 0,
+          "modularity": 0.41245904636404296
+        },
+        {
+          "type": "noun",
+          "seed": 1,
+          "modularity": 0.41245904636404296
+        },
+        {
+          "type": "noun",
+          "seed": 2,
+          "modularity": 0.4124590463640429
+        },
+        {
+          "type": "noun",
+          "seed": 3,
+          "modularity": 0.41245904636404296
+        },
+        {
+          "type": "noun",
+          "seed": 4,
+          "modularity": 0.41410063836917704
+        }
+      ],
+      "elapsedMs": 72.17179999999985,
+      "topNeighbors": [
+        {
+          "word": "人",
+          "similarity": 0.21482965453819367,
+          "co": 26021095,
+          "pmi": 2.196238700301894
+        },
+        {
+          "word": "老爷爷",
+          "similarity": 0.17183976284188873,
+          "co": 25903,
+          "pmi": 1.8544305904231224
+        },
+        {
+          "word": "小姑娘",
+          "similarity": 0.17181778916325408,
+          "co": 65478,
+          "pmi": 1.6644059251537031
+        },
+        {
+          "word": "典型",
+          "similarity": 0.17049760932748356,
+          "co": 19597,
+          "pmi": 0.9588680990634106
+        },
+        {
+          "word": "大叔",
+          "similarity": 0.16631323973789355,
+          "co": 58302,
+          "pmi": 1.0617491976442697
+        },
+        {
+          "word": "老头",
+          "similarity": 0.16587224664180095,
+          "co": 34780,
+          "pmi": 1.481150619379605
+        },
+        {
+          "word": "男人",
+          "similarity": 0.16439801850170516,
+          "co": 1079015,
+          "pmi": 1.8921551668198229
+        },
+        {
+          "word": "他",
+          "similarity": 0.1631641009284544,
+          "co": 1660173,
+          "pmi": 0.2869487418213445
+        },
+        {
+          "word": "小男孩",
+          "similarity": 0.16297896331976588,
+          "co": 75394,
+          "pmi": 2.373332929747672
+        },
+        {
+          "word": "老太太",
+          "similarity": 0.16215733302074467,
+          "co": 34425,
+          "pmi": 1.571758691665039
+        }
+      ],
+      "legacyCommunityCoverage": 0.94,
+      "legacyClassifierNeighbors": null
+    },
+    {
+      "word": "一个",
+      "mode": "word",
+      "limit": 50,
+      "candidates": 5045,
+      "nodes": 51,
+      "edges": 338,
+      "peripheral": 1082,
+      "communities": 6,
+      "overlaps": 0,
+      "within": 0.29760184490586783,
+      "between": 0.23786984957159668,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.2671187259040746,
+        "betweenMean": 0.14853460178348976,
+        "withinCount": 260,
+        "betweenCount": 781,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 736,
+      "seedPairAgreement": 0.9946666666666667,
+      "relativeDistanceError": 0.2808906652045317,
+      "trials": [
+        {
+          "type": "classifier",
+          "seed": 0,
+          "modularity": 0.03854341151857779
+        },
+        {
+          "type": "classifier",
+          "seed": 1,
+          "modularity": 0.03854341151857779
+        },
+        {
+          "type": "classifier",
+          "seed": 2,
+          "modularity": 0.03854341151857779
+        },
+        {
+          "type": "classifier",
+          "seed": 3,
+          "modularity": 0.03854341151857779
+        },
+        {
+          "type": "classifier",
+          "seed": 4,
+          "modularity": 0.03854341151857779
+        },
+        {
+          "type": "noun",
+          "seed": 0,
+          "modularity": 0.3758592580757749
+        },
+        {
+          "type": "noun",
+          "seed": 1,
+          "modularity": 0.37585925807577486
+        },
+        {
+          "type": "noun",
+          "seed": 2,
+          "modularity": 0.37777002715350305
+        },
+        {
+          "type": "noun",
+          "seed": 3,
+          "modularity": 0.37777002715350316
+        },
+        {
+          "type": "noun",
+          "seed": 4,
+          "modularity": 0.3758592580757749
+        }
+      ],
+      "elapsedMs": 54.39020000000005,
+      "topNeighbors": [
+        {
+          "word": "一位",
+          "similarity": 0.2649435564349934,
+          "co": 33570,
+          "pmi": -0.49091716275651065
+        },
+        {
+          "word": "一名",
+          "similarity": 0.21895341296663462,
+          "co": 10983.5,
+          "pmi": -1.1888174732724741
+        },
+        {
+          "word": "人",
+          "similarity": 0.21482965453819367,
+          "co": 26021095,
+          "pmi": 2.196238700301894
+        },
+        {
+          "word": "一只",
+          "similarity": 0.18012771559027374,
+          "co": 63895,
+          "pmi": -0.24072639484852704
+        },
+        {
+          "word": "老爷爷",
+          "similarity": 0.17183976284188873,
+          "co": 25903,
+          "pmi": 1.8544305904231224
+        },
+        {
+          "word": "小姑娘",
+          "similarity": 0.17181778916325408,
+          "co": 65478,
+          "pmi": 1.6644059251537031
+        },
+        {
+          "word": "典型",
+          "similarity": 0.17049760932748356,
+          "co": 19597,
+          "pmi": 0.9588680990634106
+        },
+        {
+          "word": "大叔",
+          "similarity": 0.16631323973789355,
+          "co": 58302,
+          "pmi": 1.0617491976442697
+        },
+        {
+          "word": "老头",
+          "similarity": 0.16587224664180095,
+          "co": 34780,
+          "pmi": 1.481150619379605
+        },
+        {
+          "word": "男人",
+          "similarity": 0.16439801850170516,
+          "co": 1079015,
+          "pmi": 1.8921551668198229
+        }
+      ],
+      "legacyCommunityCoverage": 0.94,
+      "legacyClassifierNeighbors": null
+    },
+    {
+      "word": "树",
+      "mode": "noun",
+      "limit": 50,
+      "candidates": 4,
+      "nodes": 5,
+      "edges": 10,
+      "peripheral": 6,
+      "communities": 1,
+      "overlaps": 0,
+      "within": 0.3047908699153419,
+      "between": null,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.3047908699153419,
+        "betweenMean": null,
+        "withinCount": 6,
+        "betweenCount": 0,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 3,
+      "seedPairAgreement": 1,
+      "relativeDistanceError": 0.22390670270218008,
+      "trials": [
+        {
+          "type": "classifier",
+          "seed": 0,
+          "modularity": -4.440892098500626e-16
+        },
+        {
+          "type": "classifier",
+          "seed": 1,
+          "modularity": -4.440892098500626e-16
+        },
+        {
+          "type": "classifier",
+          "seed": 2,
+          "modularity": -4.440892098500626e-16
+        },
+        {
+          "type": "classifier",
+          "seed": 3,
+          "modularity": -4.440892098500626e-16
+        },
+        {
+          "type": "classifier",
+          "seed": 4,
+          "modularity": -4.440892098500626e-16
+        }
+      ],
+      "elapsedMs": 7.2771999999999935,
+      "topNeighbors": [
+        {
+          "word": "一棵",
+          "similarity": 0.4902485427393294,
+          "co": 57272,
+          "pmi": 6.850867566796445
+        },
+        {
+          "word": "一株",
+          "similarity": 0.42550050087379326,
+          "co": 9563,
+          "pmi": 6.077477212559423
+        },
+        {
+          "word": "一颗",
+          "similarity": 0.21333722315775933,
+          "co": 39290,
+          "pmi": 4.122779937952956
+        },
+        {
+          "word": "一根",
+          "similarity": 0.18422338418467157,
+          "co": 388,
+          "pmi": 0.6967986868980525
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": null
+    },
+    {
+      "word": "树",
+      "mode": "word",
+      "limit": 50,
+      "candidates": 23121,
+      "nodes": 51,
+      "edges": 338,
+      "peripheral": 1185,
+      "communities": 4,
+      "overlaps": 0,
+      "within": 0.3820844643898357,
+      "between": 0.3774785001882337,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.3432305619697333,
+        "betweenMean": 0.29934314076246493,
+        "withinCount": 370,
+        "betweenCount": 759,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 314,
+      "seedPairAgreement": 0.9726241134751774,
+      "relativeDistanceError": 0.26685065324921026,
+      "trials": [
+        {
+          "type": "classifier",
+          "seed": 0,
+          "modularity": 0
+        },
+        {
+          "type": "classifier",
+          "seed": 1,
+          "modularity": 0
+        },
+        {
+          "type": "classifier",
+          "seed": 2,
+          "modularity": 0
+        },
+        {
+          "type": "classifier",
+          "seed": 3,
+          "modularity": 0
+        },
+        {
+          "type": "classifier",
+          "seed": 4,
+          "modularity": 0
+        },
+        {
+          "type": "noun",
+          "seed": 0,
+          "modularity": 0.3358161817803381
+        },
+        {
+          "type": "noun",
+          "seed": 1,
+          "modularity": 0.33827862501507683
+        },
+        {
+          "type": "noun",
+          "seed": 2,
+          "modularity": 0.34034276630666027
+        },
+        {
+          "type": "noun",
+          "seed": 3,
+          "modularity": 0.3380493011703878
+        },
+        {
+          "type": "noun",
+          "seed": 4,
+          "modularity": 0.33827862501507683
+        }
+      ],
+      "elapsedMs": 72.1577000000002,
+      "topNeighbors": [
+        {
+          "word": "一棵",
+          "similarity": 0.4902485427393294,
+          "co": 57272,
+          "pmi": 6.850867566796445
+        },
+        {
+          "word": "树木",
+          "similarity": 0.4508791696750637,
+          "co": 544,
+          "pmi": 2.9103241936765665
+        },
+        {
+          "word": "大树",
+          "similarity": 0.42722328309646,
+          "co": 1159.5,
+          "pmi": 3.3815576294124488
+        },
+        {
+          "word": "一株",
+          "similarity": 0.42550050087379326,
+          "co": 9563,
+          "pmi": 6.077477212559423
+        },
+        {
+          "word": "树枝",
+          "similarity": 0.4000208889045519,
+          "co": 891,
+          "pmi": 3.3421091573278785
+        },
+        {
+          "word": "枝叶",
+          "similarity": 0.39394640972611644,
+          "co": 1221,
+          "pmi": 4.803080521801615
+        },
+        {
+          "word": "一棵树",
+          "similarity": 0.39193415286502986,
+          "co": 1595.5,
+          "pmi": 3.757402632428457
+        },
+        {
+          "word": "树叶",
+          "similarity": 0.388901728091998,
+          "co": 3118,
+          "pmi": 3.8740186463174004
+        },
+        {
+          "word": "院子",
+          "similarity": 0.38652868773254706,
+          "co": 5488.5,
+          "pmi": 4.174448320975947
+        },
+        {
+          "word": "柳树",
+          "similarity": 0.3858634955184959,
+          "co": 254,
+          "pmi": 3.4600845901009776
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": null
+    },
+    {
+      "word": "客厅",
+      "mode": "noun",
+      "limit": 50,
+      "candidates": 1,
+      "nodes": 2,
+      "edges": 1,
+      "peripheral": 0,
+      "communities": 1,
+      "overlaps": 0,
+      "within": null,
+      "between": null,
+      "fullPeripheralSimilarity": {
+        "withinMean": null,
+        "betweenMean": null,
+        "withinCount": 0,
+        "betweenCount": 0,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 0,
+      "seedPairAgreement": 1,
+      "relativeDistanceError": 0.021755914506971844,
+      "trials": [],
+      "elapsedMs": 4.410900000000083,
+      "topNeighbors": [
+        {
+          "word": "一间",
+          "similarity": 0.31035391221310915,
+          "co": 877,
+          "pmi": 3.215608240087949
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": null
+    },
+    {
+      "word": "客厅",
+      "mode": "word",
+      "limit": 50,
+      "candidates": 23118,
+      "nodes": 51,
+      "edges": 337,
+      "peripheral": 1225,
+      "communities": 4,
+      "overlaps": 0,
+      "within": 0.38594542896159095,
+      "between": 0.37150393524766767,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.3464307161987278,
+        "betweenMean": 0.2742390619343646,
+        "withinCount": 293,
+        "betweenCount": 932,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 121,
+      "seedPairAgreement": 0.9553306122448978,
+      "relativeDistanceError": 0.27310608536042646,
+      "trials": [
+        {
+          "type": "noun",
+          "seed": 0,
+          "modularity": 0.35694307607368064
+        },
+        {
+          "type": "noun",
+          "seed": 1,
+          "modularity": 0.35744072709485397
+        },
+        {
+          "type": "noun",
+          "seed": 2,
+          "modularity": 0.35850343047303107
+        },
+        {
+          "type": "noun",
+          "seed": 3,
+          "modularity": 0.3585034304730311
+        },
+        {
+          "type": "noun",
+          "seed": 4,
+          "modularity": 0.3585034304730311
+        }
+      ],
+      "elapsedMs": 71.49720000000002,
+      "topNeighbors": [
+        {
+          "word": "卧室",
+          "similarity": 0.6368790097748255,
+          "co": 27267,
+          "pmi": 6.051959175517519
+        },
+        {
+          "word": "房间",
+          "similarity": 0.5217087680583428,
+          "co": 9800,
+          "pmi": 3.6349322138413784
+        },
+        {
+          "word": "沙发",
+          "similarity": 0.5076877720874113,
+          "co": 18593.5,
+          "pmi": 4.863027975767095
+        },
+        {
+          "word": "卫生间",
+          "similarity": 0.47910648930891847,
+          "co": 4727,
+          "pmi": 4.613157575590603
+        },
+        {
+          "word": "阳台",
+          "similarity": 0.4779791242070428,
+          "co": 9105,
+          "pmi": 4.387782699098302
+        },
+        {
+          "word": "书房",
+          "similarity": 0.4714953575674809,
+          "co": 6228,
+          "pmi": 5.510150113975467
+        },
+        {
+          "word": "茶几",
+          "similarity": 0.4320517317129551,
+          "co": 4813,
+          "pmi": 5.9112750403895875
+        },
+        {
+          "word": "厨房",
+          "similarity": 0.42843467368398375,
+          "co": 18844.5,
+          "pmi": 4.750489441845219
+        },
+        {
+          "word": "飘窗",
+          "similarity": 0.41991831705183824,
+          "co": 1045,
+          "pmi": 4.73688100863303
+        },
+        {
+          "word": "墙面",
+          "similarity": 0.4183748632963182,
+          "co": 2146.5,
+          "pmi": 4.73872488321536
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": null
+    },
+    {
+      "word": "客厅",
+      "mode": "word",
+      "limit": 200,
+      "candidates": 23118,
+      "nodes": 201,
+      "edges": 1476,
+      "peripheral": 19759,
+      "communities": 9,
+      "overlaps": 0,
+      "within": 0.3538731888051718,
+      "between": 0.326331872436349,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.27155870398175286,
+        "betweenMean": 0.19197290101558218,
+        "withinCount": 2656,
+        "betweenCount": 17045,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 7723,
+      "seedPairAgreement": 0.9345576366681894,
+      "relativeDistanceError": 0.30233557435417996,
+      "trials": [
+        {
+          "type": "noun",
+          "seed": 0,
+          "modularity": 0.5135553646562319
+        },
+        {
+          "type": "noun",
+          "seed": 1,
+          "modularity": 0.5118853075734832
+        },
+        {
+          "type": "noun",
+          "seed": 2,
+          "modularity": 0.5176759062912155
+        },
+        {
+          "type": "noun",
+          "seed": 3,
+          "modularity": 0.5068553933352713
+        },
+        {
+          "type": "noun",
+          "seed": 4,
+          "modularity": 0.505568650472508
+        }
+      ],
+      "elapsedMs": 533.8206,
+      "topNeighbors": [
+        {
+          "word": "卧室",
+          "similarity": 0.6368790097748255,
+          "co": 27267,
+          "pmi": 6.051959175517519
+        },
+        {
+          "word": "房间",
+          "similarity": 0.5217087680583428,
+          "co": 9800,
+          "pmi": 3.6349322138413784
+        },
+        {
+          "word": "沙发",
+          "similarity": 0.5076877720874113,
+          "co": 18593.5,
+          "pmi": 4.863027975767095
+        },
+        {
+          "word": "卫生间",
+          "similarity": 0.47910648930891847,
+          "co": 4727,
+          "pmi": 4.613157575590603
+        },
+        {
+          "word": "阳台",
+          "similarity": 0.4779791242070428,
+          "co": 9105,
+          "pmi": 4.387782699098302
+        },
+        {
+          "word": "书房",
+          "similarity": 0.4714953575674809,
+          "co": 6228,
+          "pmi": 5.510150113975467
+        },
+        {
+          "word": "茶几",
+          "similarity": 0.4320517317129551,
+          "co": 4813,
+          "pmi": 5.9112750403895875
+        },
+        {
+          "word": "厨房",
+          "similarity": 0.42843467368398375,
+          "co": 18844.5,
+          "pmi": 4.750489441845219
+        },
+        {
+          "word": "飘窗",
+          "similarity": 0.41991831705183824,
+          "co": 1045,
+          "pmi": 4.73688100863303
+        },
+        {
+          "word": "墙面",
+          "similarity": 0.4183748632963182,
+          "co": 2146.5,
+          "pmi": 4.73872488321536
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": null
+    },
+    {
+      "word": "客厅",
+      "mode": "word",
+      "limit": 400,
+      "candidates": 23118,
+      "nodes": 401,
+      "edges": 2977,
+      "peripheral": 79498,
+      "communities": 11,
+      "overlaps": 0,
+      "within": 0.34005325576070855,
+      "between": 0.3158989754784073,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.23784253254453547,
+        "betweenMean": 0.15989964774217022,
+        "withinCount": 8805,
+        "betweenCount": 70596,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 39786,
+      "seedPairAgreement": 0.9422213826022341,
+      "relativeDistanceError": 0.35871938166005574,
+      "trials": [
+        {
+          "type": "noun",
+          "seed": 0,
+          "modularity": 0.5877147773274265
+        },
+        {
+          "type": "noun",
+          "seed": 1,
+          "modularity": 0.5745160336690599
+        },
+        {
+          "type": "noun",
+          "seed": 2,
+          "modularity": 0.5819521970695279
+        },
+        {
+          "type": "noun",
+          "seed": 3,
+          "modularity": 0.5789901854395073
+        },
+        {
+          "type": "noun",
+          "seed": 4,
+          "modularity": 0.5846720277695606
+        }
+      ],
+      "elapsedMs": 2797.5635,
+      "topNeighbors": [
+        {
+          "word": "卧室",
+          "similarity": 0.6368790097748255,
+          "co": 27267,
+          "pmi": 6.051959175517519
+        },
+        {
+          "word": "房间",
+          "similarity": 0.5217087680583428,
+          "co": 9800,
+          "pmi": 3.6349322138413784
+        },
+        {
+          "word": "沙发",
+          "similarity": 0.5076877720874113,
+          "co": 18593.5,
+          "pmi": 4.863027975767095
+        },
+        {
+          "word": "卫生间",
+          "similarity": 0.47910648930891847,
+          "co": 4727,
+          "pmi": 4.613157575590603
+        },
+        {
+          "word": "阳台",
+          "similarity": 0.4779791242070428,
+          "co": 9105,
+          "pmi": 4.387782699098302
+        },
+        {
+          "word": "书房",
+          "similarity": 0.4714953575674809,
+          "co": 6228,
+          "pmi": 5.510150113975467
+        },
+        {
+          "word": "茶几",
+          "similarity": 0.4320517317129551,
+          "co": 4813,
+          "pmi": 5.9112750403895875
+        },
+        {
+          "word": "厨房",
+          "similarity": 0.42843467368398375,
+          "co": 18844.5,
+          "pmi": 4.750489441845219
+        },
+        {
+          "word": "飘窗",
+          "similarity": 0.41991831705183824,
+          "co": 1045,
+          "pmi": 4.73688100863303
+        },
+        {
+          "word": "墙面",
+          "similarity": 0.4183748632963182,
+          "co": 2146.5,
+          "pmi": 4.73872488321536
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": null
+    },
+    {
+      "word": "思想",
+      "mode": "noun",
+      "limit": 50,
+      "candidates": 1,
+      "nodes": 2,
+      "edges": 1,
+      "peripheral": 0,
+      "communities": 1,
+      "overlaps": 0,
+      "within": null,
+      "between": null,
+      "fullPeripheralSimilarity": {
+        "withinMean": null,
+        "betweenMean": null,
+        "withinCount": 0,
+        "betweenCount": 0,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 0,
+      "seedPairAgreement": 1,
+      "relativeDistanceError": 0.024745825848411084,
+      "trials": [],
+      "elapsedMs": 4.404599999999846,
+      "topNeighbors": [
+        {
+          "word": "一个",
+          "similarity": 0.13607136581557397,
+          "co": 54253,
+          "pmi": 0.547435953272652
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": null
+    },
+    {
+      "word": "思想",
+      "mode": "word",
+      "limit": 50,
+      "candidates": 23118,
+      "nodes": 51,
+      "edges": 342,
+      "peripheral": 1225,
+      "communities": 4,
+      "overlaps": 0,
+      "within": 0.33879430655328185,
+      "between": 0.3365466769543855,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.3005564303097214,
+        "betweenMean": 0.23630078719810552,
+        "withinCount": 298,
+        "betweenCount": 927,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 429,
+      "seedPairAgreement": 0.9344326530612245,
+      "relativeDistanceError": 0.26166727321262717,
+      "trials": [
+        {
+          "type": "noun",
+          "seed": 0,
+          "modularity": 0.33428564620774126
+        },
+        {
+          "type": "noun",
+          "seed": 1,
+          "modularity": 0.359550761113713
+        },
+        {
+          "type": "noun",
+          "seed": 2,
+          "modularity": 0.33852524033051634
+        },
+        {
+          "type": "noun",
+          "seed": 3,
+          "modularity": 0.3595507611137129
+        },
+        {
+          "type": "noun",
+          "seed": 4,
+          "modularity": 0.3479880247988496
+        }
+      ],
+      "elapsedMs": 141.7570999999998,
+      "topNeighbors": [
+        {
+          "word": "观念",
+          "similarity": 0.447161895646525,
+          "co": 3431,
+          "pmi": 3.352413415502638
+        },
+        {
+          "word": "精神",
+          "similarity": 0.4203266397775167,
+          "co": 11144.5,
+          "pmi": 2.336634604682535
+        },
+        {
+          "word": "哲学",
+          "similarity": 0.41566135881489186,
+          "co": 1949,
+          "pmi": 3.065611008071679
+        },
+        {
+          "word": "理论",
+          "similarity": 0.4135617045296999,
+          "co": 3657.5,
+          "pmi": 3.0549616079767152
+        },
+        {
+          "word": "社会",
+          "similarity": 0.3893538489672039,
+          "co": 6415.5,
+          "pmi": 1.612358555149667
+        },
+        {
+          "word": "宗教",
+          "similarity": 0.3670272330533637,
+          "co": 1041,
+          "pmi": 2.9689904480069766
+        },
+        {
+          "word": "观点",
+          "similarity": 0.36400367052150023,
+          "co": 2251.5,
+          "pmi": 2.2989160379565825
+        },
+        {
+          "word": "教育",
+          "similarity": 0.36032730521310274,
+          "co": 15660.5,
+          "pmi": 2.944572753624909
+        },
+        {
+          "word": "制度",
+          "similarity": 0.3589793713897331,
+          "co": 1145,
+          "pmi": 2.16161548922937
+        },
+        {
+          "word": "文化",
+          "similarity": 0.3589433484965564,
+          "co": 9619,
+          "pmi": 2.4115999840840954
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": null
+    },
+    {
+      "word": "独立教师",
+      "mode": "noun",
+      "limit": 50,
+      "candidates": 1,
+      "nodes": 2,
+      "edges": 1,
+      "peripheral": 0,
+      "communities": 1,
+      "overlaps": 0,
+      "within": null,
+      "between": null,
+      "fullPeripheralSimilarity": {
+        "withinMean": null,
+        "betweenMean": null,
+        "withinCount": 0,
+        "betweenCount": 0,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 0,
+      "seedPairAgreement": 1,
+      "relativeDistanceError": 0.02644620452925394,
+      "trials": [],
+      "elapsedMs": 5.080300000000534,
+      "topNeighbors": [
+        {
+          "word": "一个",
+          "similarity": 0.014553869525581409,
+          "co": 13,
+          "pmi": 2.4754429419840704
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": null
+    },
+    {
+      "word": "独立教师",
+      "mode": "word",
+      "limit": 50,
+      "candidates": 23117,
+      "nodes": 51,
+      "edges": 372,
+      "peripheral": 1225,
+      "communities": 3,
+      "overlaps": 0,
+      "within": 0.24664039321380646,
+      "between": 0.27684123267231625,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.2058483241119945,
+        "betweenMean": 0.14587014766669498,
+        "withinCount": 401,
+        "betweenCount": 824,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 206,
+      "seedPairAgreement": 0.875004081632653,
+      "relativeDistanceError": 0.2661654074020044,
+      "trials": [
+        {
+          "type": "noun",
+          "seed": 0,
+          "modularity": 0.29326132141939776
+        },
+        {
+          "type": "noun",
+          "seed": 1,
+          "modularity": 0.29460453690091826
+        },
+        {
+          "type": "noun",
+          "seed": 2,
+          "modularity": 0.3033227682115428
+        },
+        {
+          "type": "noun",
+          "seed": 3,
+          "modularity": 0.29580734620364196
+        },
+        {
+          "type": "noun",
+          "seed": 4,
+          "modularity": 0.30229076655218856
+        }
+      ],
+      "elapsedMs": 144.95089999999982,
+      "topNeighbors": [
+        {
+          "word": "在职人员",
+          "similarity": 0.058386498158141384,
+          "co": 0,
+          "pmi": null
+        },
+        {
+          "word": "学科知识",
+          "similarity": 0.05412594681713255,
+          "co": 0,
+          "pmi": null
+        },
+        {
+          "word": "师范生",
+          "similarity": 0.05260324670015402,
+          "co": 0,
+          "pmi": null
+        },
+        {
+          "word": "高中英语",
+          "similarity": 0.04901539939949037,
+          "co": 0.5,
+          "pmi": 8.297184032476652
+        },
+        {
+          "word": "精品课",
+          "similarity": 0.048606102550079994,
+          "co": 0,
+          "pmi": null
+        },
+        {
+          "word": "私立学校",
+          "similarity": 0.0485931567384997,
+          "co": 0,
+          "pmi": null
+        },
+        {
+          "word": "教师",
+          "similarity": 0.04830788155945723,
+          "co": 1,
+          "pmi": 4.789201364536039
+        },
+        {
+          "word": "辅导班",
+          "similarity": 0.04813743652698042,
+          "co": 0,
+          "pmi": null
+        },
+        {
+          "word": "斜杠青年",
+          "similarity": 0.048093581339860005,
+          "co": 0,
+          "pmi": null
+        },
+        {
+          "word": "高中数学",
+          "similarity": 0.04808700901988001,
+          "co": 0,
+          "pmi": null
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": null
+    },
+    {
+      "word": "一丝",
+      "mode": "classifier",
+      "limit": 50,
+      "candidates": 112,
+      "nodes": 51,
+      "edges": 349,
+      "peripheral": 1225,
+      "communities": 4,
+      "overlaps": 0,
+      "within": 0.2142075081412028,
+      "between": 0.1951491486561872,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.16988171766332752,
+        "betweenMean": 0.12150139522023655,
+        "withinCount": 310,
+        "betweenCount": 915,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 121,
+      "seedPairAgreement": 0.9819755102040816,
+      "relativeDistanceError": 0.2568997194360112,
+      "trials": [
+        {
+          "type": "classifier",
+          "seed": 0,
+          "modularity": 0.3168631476225726
+        },
+        {
+          "type": "classifier",
+          "seed": 1,
+          "modularity": 0.3168631476225727
+        },
+        {
+          "type": "classifier",
+          "seed": 2,
+          "modularity": 0.3162392883182401
+        },
+        {
+          "type": "classifier",
+          "seed": 3,
+          "modularity": 0.3162392883182401
+        },
+        {
+          "type": "classifier",
+          "seed": 4,
+          "modularity": 0.3162392883182401
+        }
+      ],
+      "elapsedMs": 70.03780000000006,
+      "topNeighbors": [
+        {
+          "word": "一缕",
+          "similarity": 0.4002538556960476,
+          "co": 4101.5,
+          "pmi": 4.779695622092724
+        },
+        {
+          "word": "一股",
+          "similarity": 0.32205248952503424,
+          "co": 230,
+          "pmi": 0.838889157694363
+        },
+        {
+          "word": "一阵",
+          "similarity": 0.3089131550831656,
+          "co": 333,
+          "pmi": 1.218376054613537
+        },
+        {
+          "word": "一片",
+          "similarity": 0.2805904725481008,
+          "co": 1255.5,
+          "pmi": 1.1728850028497706
+        },
+        {
+          "word": "一盏",
+          "similarity": 0.24343937182468156,
+          "co": 112.5,
+          "pmi": 1.5173177709112122
+        },
+        {
+          "word": "一曲",
+          "similarity": 0.22917447154041318,
+          "co": 68,
+          "pmi": 0.618402178318852
+        },
+        {
+          "word": "一点",
+          "similarity": 0.228328917418722,
+          "co": 3966,
+          "pmi": 0.7130089969825111
+        },
+        {
+          "word": "一束",
+          "similarity": 0.22080599018489744,
+          "co": 119.5,
+          "pmi": 1.021149530820561
+        },
+        {
+          "word": "一团",
+          "similarity": 0.21037116618689827,
+          "co": 49,
+          "pmi": 0.5271664795859576
+        },
+        {
+          "word": "一身",
+          "similarity": 0.2071937529223549,
+          "co": 154.5,
+          "pmi": -0.17740504676163388
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": [
+        {
+          "word": "一点",
+          "legacyCosine": 0.3634502700557324
+        },
+        {
+          "word": "一股",
+          "legacyCosine": 0.2645524659583179
+        },
+        {
+          "word": "一缕",
+          "legacyCosine": 0.25427760456233806
+        },
+        {
+          "word": "一阵",
+          "legacyCosine": 0.23033749492632014
+        },
+        {
+          "word": "一腔",
+          "legacyCosine": 0.06886350260949747
+        },
+        {
+          "word": "一片",
+          "legacyCosine": 0.06365920253038042
+        },
+        {
+          "word": "一线",
+          "legacyCosine": 0.059046269934180766
+        },
+        {
+          "word": "一束",
+          "legacyCosine": 0.05378784342818184
+        },
+        {
+          "word": "一道",
+          "legacyCosine": 0.04598698916943743
+        },
+        {
+          "word": "一圈",
+          "legacyCosine": 0.039566882692488856
+        }
+      ]
+    },
+    {
+      "word": "一丝",
+      "mode": "noun",
+      "limit": 50,
+      "candidates": 764,
+      "nodes": 51,
+      "edges": 354,
+      "peripheral": 1225,
+      "communities": 4,
+      "overlaps": 0,
+      "within": 0.36465431393817976,
+      "between": 0.3577444336793647,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.3285008210787551,
+        "betweenMean": 0.26125787255835725,
+        "withinCount": 308,
+        "betweenCount": 917,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 473,
+      "seedPairAgreement": 0.9874612244897959,
+      "relativeDistanceError": 0.2762547834492999,
+      "trials": [
+        {
+          "type": "noun",
+          "seed": 0,
+          "modularity": 0.3431006984447865
+        },
+        {
+          "type": "noun",
+          "seed": 1,
+          "modularity": 0.3444770598566145
+        },
+        {
+          "type": "noun",
+          "seed": 2,
+          "modularity": 0.34447705985661436
+        },
+        {
+          "type": "noun",
+          "seed": 3,
+          "modularity": 0.3400309999173428
+        },
+        {
+          "type": "noun",
+          "seed": 4,
+          "modularity": 0.3444770598566145
+        }
+      ],
+      "elapsedMs": 119.4426999999996,
+      "topNeighbors": [
+        {
+          "word": "思绪",
+          "similarity": 0.32796043411281084,
+          "co": 400,
+          "pmi": 2.0727181625435644
+        },
+        {
+          "word": "气息",
+          "similarity": 0.32321590670423456,
+          "co": 12122,
+          "pmi": 4.516770244606629
+        },
+        {
+          "word": "凉意",
+          "similarity": 0.3231596153643289,
+          "co": 15243,
+          "pmi": 6.890490394704127
+        },
+        {
+          "word": "涟漪",
+          "similarity": 0.3156084594220743,
+          "co": 10088,
+          "pmi": 6.256012340435577
+        },
+        {
+          "word": "微凉",
+          "similarity": 0.3040702330568543,
+          "co": 702,
+          "pmi": 4.091692563195844
+        },
+        {
+          "word": "细雨",
+          "similarity": 0.2989796061234764,
+          "co": 1287,
+          "pmi": 4.089739870597729
+        },
+        {
+          "word": "花香",
+          "similarity": 0.29377805565576726,
+          "co": 855,
+          "pmi": 2.9312517577346355
+        },
+        {
+          "word": "凉风",
+          "similarity": 0.29168687217467043,
+          "co": 1698,
+          "pmi": 4.324365561981539
+        },
+        {
+          "word": "清风",
+          "similarity": 0.2900230873152035,
+          "co": 1515,
+          "pmi": 3.449305124123073
+        },
+        {
+          "word": "寒意",
+          "similarity": 0.2860300021450673,
+          "co": 2386,
+          "pmi": 5.712864227015144
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": null
+    },
+    {
+      "word": "一丝",
+      "mode": "word",
+      "limit": 50,
+      "candidates": 876,
+      "nodes": 51,
+      "edges": 349,
+      "peripheral": 1129,
+      "communities": 4,
+      "overlaps": 0,
+      "within": 0.36539947415374535,
+      "between": 0.35307929647684233,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.3211833402966554,
+        "betweenMean": 0.26023672076692944,
+        "withinCount": 336,
+        "betweenCount": 705,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 399,
+      "seedPairAgreement": 0.9842318840579709,
+      "relativeDistanceError": 0.26441451543616307,
+      "trials": [
+        {
+          "type": "classifier",
+          "seed": 0,
+          "modularity": -5.551115123125783e-16
+        },
+        {
+          "type": "classifier",
+          "seed": 1,
+          "modularity": -5.551115123125783e-16
+        },
+        {
+          "type": "classifier",
+          "seed": 2,
+          "modularity": -5.551115123125783e-16
+        },
+        {
+          "type": "classifier",
+          "seed": 3,
+          "modularity": 1.1102230246251565e-16
+        },
+        {
+          "type": "classifier",
+          "seed": 4,
+          "modularity": -5.551115123125783e-16
+        },
+        {
+          "type": "noun",
+          "seed": 0,
+          "modularity": 0.3496886999054788
+        },
+        {
+          "type": "noun",
+          "seed": 1,
+          "modularity": 0.34929297733959475
+        },
+        {
+          "type": "noun",
+          "seed": 2,
+          "modularity": 0.34929297733959475
+        },
+        {
+          "type": "noun",
+          "seed": 3,
+          "modularity": 0.3512405137030018
+        },
+        {
+          "type": "noun",
+          "seed": 4,
+          "modularity": 0.34902981779209075
+        }
+      ],
+      "elapsedMs": 95.88050000000021,
+      "topNeighbors": [
+        {
+          "word": "一缕",
+          "similarity": 0.4002538556960476,
+          "co": 4101.5,
+          "pmi": 4.779695622092724
+        },
+        {
+          "word": "思绪",
+          "similarity": 0.32796043411281084,
+          "co": 400,
+          "pmi": 2.0727181625435644
+        },
+        {
+          "word": "气息",
+          "similarity": 0.32321590670423456,
+          "co": 12122,
+          "pmi": 4.516770244606629
+        },
+        {
+          "word": "凉意",
+          "similarity": 0.3231596153643289,
+          "co": 15243,
+          "pmi": 6.890490394704127
+        },
+        {
+          "word": "一股",
+          "similarity": 0.32205248952503424,
+          "co": 230,
+          "pmi": 0.838889157694363
+        },
+        {
+          "word": "涟漪",
+          "similarity": 0.3156084594220743,
+          "co": 10088,
+          "pmi": 6.256012340435577
+        },
+        {
+          "word": "一阵",
+          "similarity": 0.3089131550831656,
+          "co": 333,
+          "pmi": 1.218376054613537
+        },
+        {
+          "word": "微凉",
+          "similarity": 0.3040702330568543,
+          "co": 702,
+          "pmi": 4.091692563195844
+        },
+        {
+          "word": "细雨",
+          "similarity": 0.2989796061234764,
+          "co": 1287,
+          "pmi": 4.089739870597729
+        },
+        {
+          "word": "花香",
+          "similarity": 0.29377805565576726,
+          "co": 855,
+          "pmi": 2.9312517577346355
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": null
+    },
+    {
+      "word": "一集",
+      "mode": "classifier",
+      "limit": 50,
+      "candidates": 112,
+      "nodes": 51,
+      "edges": 318,
+      "peripheral": 1225,
+      "communities": 4,
+      "overlaps": 0,
+      "within": 0.20646587366383592,
+      "between": 0.178068583164132,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.1641574833331291,
+        "betweenMean": 0.11045643129392617,
+        "withinCount": 297,
+        "betweenCount": 928,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 125,
+      "seedPairAgreement": 0.9248979591836737,
+      "relativeDistanceError": 0.25848913866562623,
+      "trials": [
+        {
+          "type": "classifier",
+          "seed": 0,
+          "modularity": 0.34784958117173026
+        },
+        {
+          "type": "classifier",
+          "seed": 1,
+          "modularity": 0.34989308157437893
+        },
+        {
+          "type": "classifier",
+          "seed": 2,
+          "modularity": 0.3564405609171164
+        },
+        {
+          "type": "classifier",
+          "seed": 3,
+          "modularity": 0.3564405609171164
+        },
+        {
+          "type": "classifier",
+          "seed": 4,
+          "modularity": 0.3564405609171164
+        }
+      ],
+      "elapsedMs": 65.1860000000006,
+      "topNeighbors": [
+        {
+          "word": "一部",
+          "similarity": 0.4117215730864859,
+          "co": 1618.5,
+          "pmi": 2.0333209591029626
+        },
+        {
+          "word": "一幕",
+          "similarity": 0.2848885824804481,
+          "co": 211.5,
+          "pmi": 1.6786818552625729
+        },
+        {
+          "word": "一期",
+          "similarity": 0.2659783413807163,
+          "co": 118,
+          "pmi": 0.7846222594121528
+        },
+        {
+          "word": "一出",
+          "similarity": 0.21540829003438144,
+          "co": 38,
+          "pmi": 0.3049232962868549
+        },
+        {
+          "word": "一发",
+          "similarity": 0.21434593945671102,
+          "co": 95.5,
+          "pmi": 1.1539319512374266
+        },
+        {
+          "word": "一章",
+          "similarity": 0.2108922490690692,
+          "co": 47.5,
+          "pmi": 1.9440758146604762
+        },
+        {
+          "word": "一本",
+          "similarity": 0.19292973046637968,
+          "co": 75.5,
+          "pmi": -0.27002868205027475
+        },
+        {
+          "word": "一段",
+          "similarity": 0.1668588788476816,
+          "co": 2423.5,
+          "pmi": 2.0097301790239173
+        },
+        {
+          "word": "一星",
+          "similarity": 0.1501234219890495,
+          "co": 10.5,
+          "pmi": 1.0721804931796997
+        },
+        {
+          "word": "一声",
+          "similarity": 0.14389430385885307,
+          "co": 34,
+          "pmi": -1.3091115390590669
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": [
+        {
+          "word": "一部",
+          "legacyCosine": 0.3497021570875216
+        },
+        {
+          "word": "一期",
+          "legacyCosine": 0.14436932862652277
+        },
+        {
+          "word": "一出",
+          "legacyCosine": 0.10689213100561067
+        },
+        {
+          "word": "一幕",
+          "legacyCosine": 0.09663290522646462
+        },
+        {
+          "word": "一段",
+          "legacyCosine": 0.02912311527303056
+        },
+        {
+          "word": "一则",
+          "legacyCosine": 0.029007357822403997
+        },
+        {
+          "word": "一本",
+          "legacyCosine": 0.02209988279522501
+        },
+        {
+          "word": "一场",
+          "legacyCosine": 0.018827216238962174
+        },
+        {
+          "word": "一章",
+          "legacyCosine": 0.011036450832155459
+        },
+        {
+          "word": "一个",
+          "legacyCosine": 0.010222102629661068
+        }
+      ]
+    },
+    {
+      "word": "一集",
+      "mode": "noun",
+      "limit": 50,
+      "candidates": 201,
+      "nodes": 51,
+      "edges": 348,
+      "peripheral": 1225,
+      "communities": 4,
+      "overlaps": 0,
+      "within": 0.35178744232213394,
+      "between": 0.32373985827311796,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.2958445732761606,
+        "betweenMean": 0.22615842428671232,
+        "withinCount": 332,
+        "betweenCount": 893,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 308,
+      "seedPairAgreement": 0.9781877551020408,
+      "relativeDistanceError": 0.2523943001280019,
+      "trials": [
+        {
+          "type": "noun",
+          "seed": 0,
+          "modularity": 0.3411370639186105
+        },
+        {
+          "type": "noun",
+          "seed": 1,
+          "modularity": 0.33946267331931707
+        },
+        {
+          "type": "noun",
+          "seed": 2,
+          "modularity": 0.3411326051388416
+        },
+        {
+          "type": "noun",
+          "seed": 3,
+          "modularity": 0.3411326051388416
+        },
+        {
+          "type": "noun",
+          "seed": 4,
+          "modularity": 0.3411326051388416
+        }
+      ],
+      "elapsedMs": 112.40619999999944,
+      "topNeighbors": [
+        {
+          "word": "剧",
+          "similarity": 0.5607243132490785,
+          "co": 4280,
+          "pmi": 3.053030240361622
+        },
+        {
+          "word": "大结局",
+          "similarity": 0.5526539683684323,
+          "co": 2006,
+          "pmi": 3.868865464605833
+        },
+        {
+          "word": "第一集",
+          "similarity": 0.5222396846637938,
+          "co": 965,
+          "pmi": 4.075529387158859
+        },
+        {
+          "word": "集",
+          "similarity": 0.5206290642066449,
+          "co": 4033,
+          "pmi": 3.2996038161508707
+        },
+        {
+          "word": "剧情",
+          "similarity": 0.50614427355352,
+          "co": 4093,
+          "pmi": 3.214974240060726
+        },
+        {
+          "word": "这剧",
+          "similarity": 0.45391670852081206,
+          "co": 312,
+          "pmi": 3.511136057221087
+        },
+        {
+          "word": "电视剧",
+          "similarity": 0.44993780121135885,
+          "co": 8502,
+          "pmi": 3.3830722929114216
+        },
+        {
+          "word": "新剧",
+          "similarity": 0.41891584894139244,
+          "co": 325,
+          "pmi": 2.8300988879731293
+        },
+        {
+          "word": "第二季",
+          "similarity": 0.4174484696698155,
+          "co": 701,
+          "pmi": 2.719480448372588
+        },
+        {
+          "word": "新一集",
+          "similarity": 0.4146497040127664,
+          "co": 40,
+          "pmi": 3.3934508664077363
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": null
+    },
+    {
+      "word": "一集",
+      "mode": "word",
+      "limit": 50,
+      "candidates": 313,
+      "nodes": 51,
+      "edges": 347,
+      "peripheral": 1140,
+      "communities": 5,
+      "overlaps": 0,
+      "within": 0.35938847158117093,
+      "between": 0.3334361568116894,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.3064285916717171,
+        "betweenMean": 0.22938492101043012,
+        "withinCount": 299,
+        "betweenCount": 785,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 262,
+      "seedPairAgreement": 1,
+      "relativeDistanceError": 0.24593960404180942,
+      "trials": [
+        {
+          "type": "classifier",
+          "seed": 0,
+          "modularity": 0
+        },
+        {
+          "type": "classifier",
+          "seed": 1,
+          "modularity": 0
+        },
+        {
+          "type": "classifier",
+          "seed": 2,
+          "modularity": 0
+        },
+        {
+          "type": "classifier",
+          "seed": 3,
+          "modularity": 0
+        },
+        {
+          "type": "classifier",
+          "seed": 4,
+          "modularity": 0
+        },
+        {
+          "type": "noun",
+          "seed": 0,
+          "modularity": 0.3479683392749525
+        },
+        {
+          "type": "noun",
+          "seed": 1,
+          "modularity": 0.3479683392749525
+        },
+        {
+          "type": "noun",
+          "seed": 2,
+          "modularity": 0.3479683392749525
+        },
+        {
+          "type": "noun",
+          "seed": 3,
+          "modularity": 0.3479683392749525
+        },
+        {
+          "type": "noun",
+          "seed": 4,
+          "modularity": 0.34796833927495263
+        }
+      ],
+      "elapsedMs": 78.94409999999971,
+      "topNeighbors": [
+        {
+          "word": "剧",
+          "similarity": 0.5607243132490785,
+          "co": 4280,
+          "pmi": 3.053030240361622
+        },
+        {
+          "word": "大结局",
+          "similarity": 0.5526539683684323,
+          "co": 2006,
+          "pmi": 3.868865464605833
+        },
+        {
+          "word": "第一集",
+          "similarity": 0.5222396846637938,
+          "co": 965,
+          "pmi": 4.075529387158859
+        },
+        {
+          "word": "集",
+          "similarity": 0.5206290642066449,
+          "co": 4033,
+          "pmi": 3.2996038161508707
+        },
+        {
+          "word": "剧情",
+          "similarity": 0.50614427355352,
+          "co": 4093,
+          "pmi": 3.214974240060726
+        },
+        {
+          "word": "这剧",
+          "similarity": 0.45391670852081206,
+          "co": 312,
+          "pmi": 3.511136057221087
+        },
+        {
+          "word": "电视剧",
+          "similarity": 0.44993780121135885,
+          "co": 8502,
+          "pmi": 3.3830722929114216
+        },
+        {
+          "word": "新剧",
+          "similarity": 0.41891584894139244,
+          "co": 325,
+          "pmi": 2.8300988879731293
+        },
+        {
+          "word": "第二季",
+          "similarity": 0.4174484696698155,
+          "co": 701,
+          "pmi": 2.719480448372588
+        },
+        {
+          "word": "新一集",
+          "similarity": 0.4146497040127664,
+          "co": 40,
+          "pmi": 3.3934508664077363
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": null
+    },
+    {
+      "word": "一招",
+      "mode": "classifier",
+      "limit": 50,
+      "candidates": 112,
+      "nodes": 51,
+      "edges": 324,
+      "peripheral": 1225,
+      "communities": 4,
+      "overlaps": 0,
+      "within": 0.2014368799621005,
+      "between": 0.17462865533098754,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.15921564456649742,
+        "betweenMean": 0.1070110451891425,
+        "withinCount": 320,
+        "betweenCount": 905,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 177,
+      "seedPairAgreement": 0.9497142857142858,
+      "relativeDistanceError": 0.26077848405328846,
+      "trials": [
+        {
+          "type": "classifier",
+          "seed": 0,
+          "modularity": 0.3785716671071159
+        },
+        {
+          "type": "classifier",
+          "seed": 1,
+          "modularity": 0.37079395412485394
+        },
+        {
+          "type": "classifier",
+          "seed": 2,
+          "modularity": 0.3638860231389236
+        },
+        {
+          "type": "classifier",
+          "seed": 3,
+          "modularity": 0.3638860231389236
+        },
+        {
+          "type": "classifier",
+          "seed": 4,
+          "modularity": 0.36388602313892365
+        }
+      ],
+      "elapsedMs": 71.57250000000022,
+      "topNeighbors": [
+        {
+          "word": "一出",
+          "similarity": 0.1604596399054939,
+          "co": 8,
+          "pmi": 0.2873230899281244
+        },
+        {
+          "word": "一篇",
+          "similarity": 0.15436287698960813,
+          "co": 150,
+          "pmi": 1.247557061020417
+        },
+        {
+          "word": "一把",
+          "similarity": 0.15044382036426318,
+          "co": 43,
+          "pmi": -0.10465766273020409
+        },
+        {
+          "word": "一幕",
+          "similarity": 0.14899279225056147,
+          "co": 7,
+          "pmi": -0.189088582480627
+        },
+        {
+          "word": "一则",
+          "similarity": 0.1487831912329552,
+          "co": 3.5,
+          "pmi": 0.11285111771451857
+        },
+        {
+          "word": "一轮",
+          "similarity": 0.14636156375506446,
+          "co": 3,
+          "pmi": -0.7053067625777167
+        },
+        {
+          "word": "一盘",
+          "similarity": 0.14614462371664957,
+          "co": 7,
+          "pmi": 0.10717910100280002
+        },
+        {
+          "word": "一根",
+          "similarity": 0.14157412711663375,
+          "co": 15.5,
+          "pmi": -0.18554115949758218
+        },
+        {
+          "word": "一发",
+          "similarity": 0.13993282609251054,
+          "co": 7,
+          "pmi": 0.08126026449387472
+        },
+        {
+          "word": "一身",
+          "similarity": 0.1387299575803047,
+          "co": 19,
+          "pmi": -0.2563230638888946
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": [
+        {
+          "word": "一门",
+          "legacyCosine": 0.05358060483623689
+        },
+        {
+          "word": "一项",
+          "legacyCosine": 0.03170413939838962
+        },
+        {
+          "word": "一身",
+          "legacyCosine": 0.02990076235626668
+        },
+        {
+          "word": "一条",
+          "legacyCosine": 0.003151692976956149
+        },
+        {
+          "word": "一出",
+          "legacyCosine": 0.00196933583956035
+        },
+        {
+          "word": "一把",
+          "legacyCosine": 0.0019174265110866277
+        },
+        {
+          "word": "一个",
+          "legacyCosine": 0.0014559743872975817
+        }
+      ]
+    },
+    {
+      "word": "一招",
+      "mode": "noun",
+      "limit": 50,
+      "candidates": 18,
+      "nodes": 19,
+      "edges": 119,
+      "peripheral": 153,
+      "communities": 2,
+      "overlaps": 0,
+      "within": 0.12361119799161094,
+      "between": 0.11302331271895069,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.11291320022652565,
+        "betweenMean": 0.08708200021012527,
+        "withinCount": 73,
+        "betweenCount": 80,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 43,
+      "seedPairAgreement": 0.9330718954248367,
+      "relativeDistanceError": 0.26397288259414725,
+      "trials": [
+        {
+          "type": "noun",
+          "seed": 0,
+          "modularity": 0.11194603095249844
+        },
+        {
+          "type": "noun",
+          "seed": 1,
+          "modularity": 0.11194603095249855
+        },
+        {
+          "type": "noun",
+          "seed": 2,
+          "modularity": 0.11194603095249844
+        },
+        {
+          "type": "noun",
+          "seed": 3,
+          "modularity": 0.11545813490250048
+        },
+        {
+          "type": "noun",
+          "seed": 4,
+          "modularity": 0.11194603095249844
+        }
+      ],
+      "elapsedMs": 33.89860000000044,
+      "topNeighbors": [
+        {
+          "word": "绝招",
+          "similarity": 0.2503739822646013,
+          "co": 245,
+          "pmi": 5.17564754324634
+        },
+        {
+          "word": "绝技",
+          "similarity": 0.23969443250742328,
+          "co": 156,
+          "pmi": 5.226092539869162
+        },
+        {
+          "word": "招式",
+          "similarity": 0.22132788353464408,
+          "co": 111,
+          "pmi": 4.809181852136524
+        },
+        {
+          "word": "招数",
+          "similarity": 0.20477134022338578,
+          "co": 45,
+          "pmi": 3.7080863271793554
+        },
+        {
+          "word": "武功",
+          "similarity": 0.19928608639855439,
+          "co": 38,
+          "pmi": 2.859719676547984
+        },
+        {
+          "word": "妙招",
+          "similarity": 0.1822045553867548,
+          "co": 28,
+          "pmi": 3.342557402048401
+        },
+        {
+          "word": "必杀技",
+          "similarity": 0.1737803735333789,
+          "co": 221,
+          "pmi": 5.699364648009238
+        },
+        {
+          "word": "杀手锏",
+          "similarity": 0.1682038411074347,
+          "co": 82,
+          "pmi": 5.137005631289215
+        },
+        {
+          "word": "降龙十八掌",
+          "similarity": 0.16101869879285596,
+          "co": 68,
+          "pmi": 5.929018646989716
+        },
+        {
+          "word": "绝活",
+          "similarity": 0.15814729655616203,
+          "co": 256,
+          "pmi": 5.9496538684885145
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": null
+    },
+    {
+      "word": "一招",
+      "mode": "word",
+      "limit": 50,
+      "candidates": 130,
+      "nodes": 51,
+      "edges": 318,
+      "peripheral": 675,
+      "communities": 6,
+      "overlaps": 0,
+      "within": 0.17864300743215308,
+      "between": 0.14715803106498856,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.16133375138907247,
+        "betweenMean": 0.10659549343502188,
+        "withinCount": 216,
+        "betweenCount": 448,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 134,
+      "seedPairAgreement": 0.9151604278074865,
+      "relativeDistanceError": 0.2707459441371986,
+      "trials": [
+        {
+          "type": "classifier",
+          "seed": 0,
+          "modularity": 0.3378619913253656
+        },
+        {
+          "type": "classifier",
+          "seed": 1,
+          "modularity": 0.3321008892261895
+        },
+        {
+          "type": "classifier",
+          "seed": 2,
+          "modularity": 0.3403711455183001
+        },
+        {
+          "type": "classifier",
+          "seed": 3,
+          "modularity": 0.34037114551830006
+        },
+        {
+          "type": "classifier",
+          "seed": 4,
+          "modularity": 0.3403711455183001
+        },
+        {
+          "type": "noun",
+          "seed": 0,
+          "modularity": 0.11953449181144041
+        },
+        {
+          "type": "noun",
+          "seed": 1,
+          "modularity": 0.11953449181144041
+        },
+        {
+          "type": "noun",
+          "seed": 2,
+          "modularity": 0.1195344918114403
+        },
+        {
+          "type": "noun",
+          "seed": 3,
+          "modularity": 0.11665284002433035
+        },
+        {
+          "type": "noun",
+          "seed": 4,
+          "modularity": 0.11953449181144041
+        }
+      ],
+      "elapsedMs": 69.32899999999972,
+      "topNeighbors": [
+        {
+          "word": "绝招",
+          "similarity": 0.2503739822646013,
+          "co": 245,
+          "pmi": 5.17564754324634
+        },
+        {
+          "word": "绝技",
+          "similarity": 0.23969443250742328,
+          "co": 156,
+          "pmi": 5.226092539869162
+        },
+        {
+          "word": "招式",
+          "similarity": 0.22132788353464408,
+          "co": 111,
+          "pmi": 4.809181852136524
+        },
+        {
+          "word": "招数",
+          "similarity": 0.20477134022338578,
+          "co": 45,
+          "pmi": 3.7080863271793554
+        },
+        {
+          "word": "武功",
+          "similarity": 0.19928608639855439,
+          "co": 38,
+          "pmi": 2.859719676547984
+        },
+        {
+          "word": "妙招",
+          "similarity": 0.1822045553867548,
+          "co": 28,
+          "pmi": 3.342557402048401
+        },
+        {
+          "word": "必杀技",
+          "similarity": 0.1737803735333789,
+          "co": 221,
+          "pmi": 5.699364648009238
+        },
+        {
+          "word": "杀手锏",
+          "similarity": 0.1682038411074347,
+          "co": 82,
+          "pmi": 5.137005631289215
+        },
+        {
+          "word": "降龙十八掌",
+          "similarity": 0.16101869879285596,
+          "co": 68,
+          "pmi": 5.929018646989716
+        },
+        {
+          "word": "一出",
+          "similarity": 0.1604596399054939,
+          "co": 8,
+          "pmi": 0.2873230899281244
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": null
+    },
+    {
+      "word": "一册",
+      "mode": "classifier",
+      "limit": 50,
+      "candidates": 112,
+      "nodes": 51,
+      "edges": 329,
+      "peripheral": 1225,
+      "communities": 3,
+      "overlaps": 0,
+      "within": 0.22174569502649927,
+      "between": 0.18677700612523812,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.16530764166185388,
+        "betweenMean": 0.10638057451535754,
+        "withinCount": 457,
+        "betweenCount": 768,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 107,
+      "seedPairAgreement": 0.9503673469387754,
+      "relativeDistanceError": 0.2630106256232471,
+      "trials": [
+        {
+          "type": "classifier",
+          "seed": 0,
+          "modularity": 0.4014644256344331
+        },
+        {
+          "type": "classifier",
+          "seed": 1,
+          "modularity": 0.40036500663337093
+        },
+        {
+          "type": "classifier",
+          "seed": 2,
+          "modularity": 0.3946358923436891
+        },
+        {
+          "type": "classifier",
+          "seed": 3,
+          "modularity": 0.3946358923436891
+        },
+        {
+          "type": "classifier",
+          "seed": 4,
+          "modularity": 0.39463589234368923
+        }
+      ],
+      "elapsedMs": 49.54610000000048,
+      "topNeighbors": [
+        {
+          "word": "一本",
+          "similarity": 0.319842779784865,
+          "co": 70,
+          "pmi": 3.581650491833937
+        },
+        {
+          "word": "一页",
+          "similarity": 0.2158572395877929,
+          "co": 18,
+          "pmi": 3.661310946617601
+        },
+        {
+          "word": "一卷",
+          "similarity": 0.1999364785652361,
+          "co": 19,
+          "pmi": 5.157493306549523
+        },
+        {
+          "word": "一篇",
+          "similarity": 0.1896451260964435,
+          "co": 9,
+          "pmi": 0.8544824964706288
+        },
+        {
+          "word": "一章",
+          "similarity": 0.17446410064547335,
+          "co": 3,
+          "pmi": 3.1428389561860577
+        },
+        {
+          "word": "一幅",
+          "similarity": 0.16797259249568894,
+          "co": 9,
+          "pmi": 2.612723768322853
+        },
+        {
+          "word": "一部",
+          "similarity": 0.13141401256306642,
+          "co": 16,
+          "pmi": 1.3775351718745126
+        },
+        {
+          "word": "一盏",
+          "similarity": 0.12570402115732668,
+          "co": 20,
+          "pmi": 4.227270075075076
+        },
+        {
+          "word": "一曲",
+          "similarity": 0.12157840462695808,
+          "co": 4.5,
+          "pmi": 2.3401451221733667
+        },
+        {
+          "word": "一堂",
+          "similarity": 0.11908527463349845,
+          "co": 0.5,
+          "pmi": 1.4091197334605665
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": [
+        {
+          "word": "一本",
+          "legacyCosine": 0.3811423955045198
+        },
+        {
+          "word": "一页",
+          "legacyCosine": 0.24588491827457537
+        },
+        {
+          "word": "一章",
+          "legacyCosine": 0.19922540303059968
+        },
+        {
+          "word": "一卷",
+          "legacyCosine": 0.16682764781937706
+        },
+        {
+          "word": "一篇",
+          "legacyCosine": 0.07493738006241854
+        },
+        {
+          "word": "一部",
+          "legacyCosine": 0.06400576637935851
+        },
+        {
+          "word": "一首",
+          "legacyCosine": 0.02369649436948079
+        },
+        {
+          "word": "一幅",
+          "legacyCosine": 0.01800297821655031
+        },
+        {
+          "word": "一段",
+          "legacyCosine": 0.016903070173225714
+        },
+        {
+          "word": "一句",
+          "legacyCosine": 0.01575239616735371
+        }
+      ]
+    },
+    {
+      "word": "一册",
+      "mode": "noun",
+      "limit": 50,
+      "candidates": 44,
+      "nodes": 45,
+      "edges": 318,
+      "peripheral": 946,
+      "communities": 4,
+      "overlaps": 0,
+      "within": 0.2729984517833084,
+      "between": 0.2766505264448065,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.23268612947325648,
+        "betweenMean": 0.17828671866778473,
+        "withinCount": 238,
+        "betweenCount": 708,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 434,
+      "seedPairAgreement": 0.9164482029598309,
+      "relativeDistanceError": 0.24808706055368873,
+      "trials": [
+        {
+          "type": "noun",
+          "seed": 0,
+          "modularity": 0.2453192592571048
+        },
+        {
+          "type": "noun",
+          "seed": 1,
+          "modularity": 0.24603043280375192
+        },
+        {
+          "type": "noun",
+          "seed": 2,
+          "modularity": 0.2515741278187494
+        },
+        {
+          "type": "noun",
+          "seed": 3,
+          "modularity": 0.2421352177128419
+        },
+        {
+          "type": "noun",
+          "seed": 4,
+          "modularity": 0.2563030418909912
+        }
+      ],
+      "elapsedMs": 78.51120000000083,
+      "topNeighbors": [
+        {
+          "word": "书",
+          "similarity": 0.29462393709022106,
+          "co": 574,
+          "pmi": 4.637534351959275
+        },
+        {
+          "word": "本书",
+          "similarity": 0.28538145168346285,
+          "co": 31,
+          "pmi": 2.5574148982611167
+        },
+        {
+          "word": "册",
+          "similarity": 0.28239943640244086,
+          "co": 185,
+          "pmi": 7.072445575071743
+        },
+        {
+          "word": "书籍",
+          "similarity": 0.27251195712693277,
+          "co": 291,
+          "pmi": 6.232390933446213
+        },
+        {
+          "word": "新书",
+          "similarity": 0.2469073858343438,
+          "co": 21,
+          "pmi": 4.170544020528135
+        },
+        {
+          "word": "图书",
+          "similarity": 0.246541934810937,
+          "co": 37,
+          "pmi": 4.333433584596261
+        },
+        {
+          "word": "此书",
+          "similarity": 0.2444606291363942,
+          "co": 14,
+          "pmi": 5.496493260092207
+        },
+        {
+          "word": "旧书",
+          "similarity": 0.2411107385699355,
+          "co": 26,
+          "pmi": 6.350289517050847
+        },
+        {
+          "word": "诗集",
+          "similarity": 0.2367478857444018,
+          "co": 58,
+          "pmi": 6.827959594357898
+        },
+        {
+          "word": "全书",
+          "similarity": 0.23388200178471677,
+          "co": 13,
+          "pmi": 5.421527919879656
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": null
+    },
+    {
+      "word": "一册",
+      "mode": "word",
+      "limit": 50,
+      "candidates": 156,
+      "nodes": 51,
+      "edges": 364,
+      "peripheral": 978,
+      "communities": 6,
+      "overlaps": 0,
+      "within": 0.2861536292481762,
+      "between": 0.27306846522903727,
+      "fullPeripheralSimilarity": {
+        "withinMean": 0.24659628080358315,
+        "betweenMean": 0.18556460288539434,
+        "withinCount": 218,
+        "betweenCount": 638,
+        "population": "all eligible same-type peripheral relations, before display sparsification"
+      },
+      "positiveCoPeripheralEdgesMissingFromOldTop400": 340,
+      "seedPairAgreement": 0.9793170731707317,
+      "relativeDistanceError": 0.2444944901993459,
+      "trials": [
+        {
+          "type": "classifier",
+          "seed": 0,
+          "modularity": 0.05057460060825944
+        },
+        {
+          "type": "classifier",
+          "seed": 1,
+          "modularity": 0.05057460060825944
+        },
+        {
+          "type": "classifier",
+          "seed": 2,
+          "modularity": 0.050574600608259385
+        },
+        {
+          "type": "classifier",
+          "seed": 3,
+          "modularity": 0.050574600608259385
+        },
+        {
+          "type": "classifier",
+          "seed": 4,
+          "modularity": 0.050574600608259385
+        },
+        {
+          "type": "noun",
+          "seed": 0,
+          "modularity": 0.24515643236561194
+        },
+        {
+          "type": "noun",
+          "seed": 1,
+          "modularity": 0.2498569802700402
+        },
+        {
+          "type": "noun",
+          "seed": 2,
+          "modularity": 0.245156432365612
+        },
+        {
+          "type": "noun",
+          "seed": 3,
+          "modularity": 0.2498569802700402
+        },
+        {
+          "type": "noun",
+          "seed": 4,
+          "modularity": 0.24470913079378015
+        }
+      ],
+      "elapsedMs": 61.866399999999885,
+      "topNeighbors": [
+        {
+          "word": "一本",
+          "similarity": 0.319842779784865,
+          "co": 70,
+          "pmi": 3.581650491833937
+        },
+        {
+          "word": "书",
+          "similarity": 0.29462393709022106,
+          "co": 574,
+          "pmi": 4.637534351959275
+        },
+        {
+          "word": "本书",
+          "similarity": 0.28538145168346285,
+          "co": 31,
+          "pmi": 2.5574148982611167
+        },
+        {
+          "word": "册",
+          "similarity": 0.28239943640244086,
+          "co": 185,
+          "pmi": 7.072445575071743
+        },
+        {
+          "word": "书籍",
+          "similarity": 0.27251195712693277,
+          "co": 291,
+          "pmi": 6.232390933446213
+        },
+        {
+          "word": "新书",
+          "similarity": 0.2469073858343438,
+          "co": 21,
+          "pmi": 4.170544020528135
+        },
+        {
+          "word": "图书",
+          "similarity": 0.246541934810937,
+          "co": 37,
+          "pmi": 4.333433584596261
+        },
+        {
+          "word": "此书",
+          "similarity": 0.2444606291363942,
+          "co": 14,
+          "pmi": 5.496493260092207
+        },
+        {
+          "word": "旧书",
+          "similarity": 0.2411107385699355,
+          "co": 26,
+          "pmi": 6.350289517050847
+        },
+        {
+          "word": "诗集",
+          "similarity": 0.2367478857444018,
+          "co": 58,
+          "pmi": 6.827959594357898
+        }
+      ],
+      "legacyCommunityCoverage": 1,
+      "legacyClassifierNeighbors": null
+    }
+  ]
+}

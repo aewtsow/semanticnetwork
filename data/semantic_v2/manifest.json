@@ -1,0 +1,24 @@
+{
+  "version": "ppmi-full-context-v2-20260929",
+  "nodeCount": 23231,
+  "contextCount": 140325,
+  "sourceSHA256": "ae4d3874ffa91cf4be032ae21db58ba3aa25efeb06a60dfc31d9e4b7316d9c84",
+  "nodeSHA256": "0fda2746d22bf375ff8fa464709ac09aa8c68a29b49bece9cceb9e674af685b4",
+  "pairSHA256": "b7670390f45f7dc9116f27908ea5aa4e299272d5f549914e6ef39b06502dac97",
+  "contextTotal": 116109681541.0,
+  "legacyPMITotal": 116109681541.0,
+  "method": "full-context PPMI, L2-normalized rows, exact sparse dot product",
+  "definition": "PPMI(i,c)=max(0,ln(A[i,c]*sum(A)/(rowSum[i]*colSum[c])))",
+  "approximation": false,
+  "dtype": "float64-le",
+  "rowLayout": [
+    "cosine[nodeCount]",
+    "coOccurrence[nodeCount]"
+  ],
+  "rowBytes": 371696,
+  "coAreaCeiling": 26021095,
+  "zeroRows": [],
+  "sourceMarginals": "complete original directed matrix, including diagonal",
+  "coPolicy": "same-type symmetric mean; valid_common directed pairs override",
+  "rowsURL": "rows/{index}.bin"
+}

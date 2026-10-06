@@ -1,0 +1,13 @@
+{
+  "date": "2026-09-29",
+  "pageVersion": "20260929-3",
+  "method": "Actual in-app browser UI actions and read-only DOM observations",
+  "relayout": {"movingObserved": true, "settledObserved": true, "centerTransform": "translate(0,0)"},
+  "centerSwitch": {"from": "一棵", "to": "树", "initialObservedPosition": [23.2755, -50.1391], "finalPosition": [0,0], "intermediateNewNodeOpacity": 0.0586245, "remainingGhosts": 0},
+  "drag": {"word": "一株", "pinnedFinalPosition": [182.0005,92.8528], "neighbor": "树", "neighborBefore": [12.4249,-56.1734], "neighborAfter": [23.8438,-51.3634], "buildCountBefore": 3, "buildCountAfter": 3, "centerStayedFixed": true},
+  "thresholds": {"degree400With50SelectedLeavesOnlyCenter": true, "numericDegreeAndSliderValueText": 400, "legacyPreset": {"co":30,"pmi":3,"degree":3,"hideUnpaired":true}},
+  "density": {"center":"客厅","neighbors":400,"sparsePeripheralEdges":2577,"allPeripheralEdges":79498,"cacheMiB":95.7,"allEdgesMotion":"completes but not smooth; do not claim stable frame rate"},
+  "star": {"center":"客厅","neighbors":164,"edges":1485,"openedAndReturned":true,"algorithmModified":false},
+  "consoleErrorsObserved": [],
+  "screenshot": "restored-desktop.png"
+}

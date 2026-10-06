@@ -1,0 +1,16 @@
+{
+  "date": "2026-09-29",
+  "method": "Local in-app browser UI actions and DOM observations; not a frame-rate benchmark",
+  "desktopViewport": [1440, 960],
+  "classifierNoun": {"center": "一棵", "candidateCount": 532, "shown": 50, "peripheralShown": 285, "peripheralEligible": 1225, "communities": 3},
+  "word400Default": {"center": "客厅", "shown": 400, "peripheralShown": 2577, "peripheralEligible": 79498, "elapsedSeconds": 4.34, "rowCacheMiB": 95.7},
+  "word200All": {"center": "客厅", "shown": 200, "peripheralShown": 19759, "peripheralEligible": 19759, "elapsedSeconds": 1.63},
+  "word400AllFinal": {"center": "客厅", "shown": 400, "peripheralShown": 79498, "peripheralEligible": 79498, "elapsedSeconds": 4.49, "rowCacheMiB": 95.7},
+  "pan400All": {"before": "translate(463.5,430.5) scale(0.6588060378617295)", "after": "translate(483.5,470.5) scale(0.6588060378617295)", "pointerDelta": [20, 40]},
+  "widthOnly": {"beforeBuildCount": 1, "afterBuildCount": 1, "newWidthPx": 1.1},
+  "detailOnly": {"word": "树", "co": 57272, "similarityDisplayed": 0.49, "pmiDisplayed": 6.851, "beforeBuildCount": 1, "afterBuildCount": 1},
+  "emptyNeighborhood": {"coThreshold": 999999999, "neighbors": 0, "peripheralEdges": 0, "messageVisible": true},
+  "narrowViewport": {"requestedWidth": 390, "documentWidth": 375, "scrollWidth": 375, "filtersCollapsed": true, "detailsCollapsed": true},
+  "rapidChanges": "Canceled obsolete center/limit/display requests; final rendered center and limit matched the last input",
+  "star": {"entryCenter": "客厅", "neighbors": 164, "edges": 1485, "switchedTo": "窗帘", "settledCenterTransform": "translate(600 400)", "returnPreservedMainCenter": "客厅"}
+}

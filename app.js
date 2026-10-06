@@ -441,6 +441,9 @@ function loadWordChunk(chunkIndex) {
     const promise = fetch(`${wordManifest.chunkBasePath}${chunk.file}`).then(async (response) => {
       if (!response.ok) throw new Error(`词汇网络数据分块加载失败：${chunk.file}`);
       wordChunkBuffers.set(chunkIndex, await response.arrayBuffer());
+    }).catch((error) => {
+      state.wordChunkPromises.delete(chunkIndex);
+      throw error;
     });
     state.wordChunkPromises.set(chunkIndex, promise);
   }
@@ -457,7 +460,10 @@ async function ensureWordBuffers() {
   if (!state.wordBuffersPromise) {
     state.wordBuffersPromise = Promise.all(
       wordManifest.chunks.map((_, index) => loadWordChunk(index)),
-    ).then(() => { state.wordBuffersLoaded = true; });
+    ).then(() => { state.wordBuffersLoaded = true; }).catch((error) => {
+      state.wordBuffersPromise = null;
+      throw error;
+    });
   }
   await state.wordBuffersPromise;
 }
@@ -1708,6 +1714,11 @@ function openStarMap() {
 }
 
 function closeStarMap() {
+  if (window.parent !== window && new URLSearchParams(location.search).has('starEmbed')) {
+    stopStarMotion();
+    window.parent.postMessage({type: 'semantic-star-close'}, location.origin);
+    return;
+  }
   state.starOpen = false;
   state.starRenderToken += 1;
   state.starTransitioning = false;
@@ -2887,3 +2898,12 @@ window.__NETWORK_DEBUG__ = {
 configureControls();
 bindControls();
 void renderNetwork();
+
+// Isolated legacy star view: the main workbench never changes its data or motion.
+window.addEventListener('message', (event) => {
+  if (event.origin !== location.origin || event.source !== window.parent || window.parent === window) return;
+  if (event.data?.type !== 'semantic-star-open') return;
+  if (!wordNodeById.has(event.data.target)) return;
+  setWordTargetState(event.data.target);
+  openStarMap();
+});

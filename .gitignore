@@ -1,7 +1,13 @@
+# Exact v2 rows are local artifacts (~8.63 GB); publish via a data store separately.
+data/semantic_v2/rows/
+data/semantic_v2/*.tmp
 build_cache/
 git/
-test_artifacts/
 __pycache__/
 *.py[cod]
 .DS_Store
 Thumbs.db
+.codex-tmp/
+data/semantic_v2/progress.json
+test_artifacts/*
+!test_artifacts/semantic_v2/

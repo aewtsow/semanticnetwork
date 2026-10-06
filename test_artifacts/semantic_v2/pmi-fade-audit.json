@@ -1,0 +1,275 @@
+{
+  "curve": "sigmoid((PMI-5)/2)^2",
+  "colors": [
+    {
+      "pmi": -1.7976931348623157e+308,
+      "rgb": [
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "pmi": -30,
+      "rgb": [
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "pmi": -3,
+      "rgb": [
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "pmi": 0,
+      "rgb": [
+        254,
+        254,
+        254
+      ]
+    },
+    {
+      "pmi": 3,
+      "rgb": [
+        239,
+        242,
+        240
+      ]
+    },
+    {
+      "pmi": 5,
+      "rgb": [
+        198,
+        209,
+        203
+      ]
+    },
+    {
+      "pmi": 7,
+      "rgb": [
+        133,
+        156,
+        144
+      ]
+    },
+    {
+      "pmi": 10,
+      "rgb": [
+        60,
+        97,
+        78
+      ]
+    },
+    {
+      "pmi": 16,
+      "rgb": [
+        29,
+        72,
+        50
+      ]
+    },
+    {
+      "pmi": 30,
+      "rgb": [
+        27,
+        70,
+        48
+      ]
+    },
+    {
+      "pmi": 1.7976931348623157e+308,
+      "rgb": [
+        27,
+        70,
+        48
+      ]
+    }
+  ],
+  "reports": [
+    {
+      "word": "一棵",
+      "mode": "classifier",
+      "limit": 50,
+      "allEdges": false,
+      "nodes": 51,
+      "edges": 331,
+      "modelAndLayoutUnchanged": true,
+      "paintOrderMs": 0.1733000000000402
+    },
+    {
+      "word": "一棵",
+      "mode": "classifier",
+      "limit": 50,
+      "allEdges": true,
+      "nodes": 51,
+      "edges": 1275,
+      "modelAndLayoutUnchanged": true,
+      "paintOrderMs": 0.40609999999992397
+    },
+    {
+      "word": "一棵",
+      "mode": "noun",
+      "limit": 50,
+      "allEdges": false,
+      "nodes": 51,
+      "edges": 335,
+      "modelAndLayoutUnchanged": true,
+      "paintOrderMs": 0.20499999999992724
+    },
+    {
+      "word": "一棵",
+      "mode": "noun",
+      "limit": 50,
+      "allEdges": true,
+      "nodes": 51,
+      "edges": 1275,
+      "modelAndLayoutUnchanged": true,
+      "paintOrderMs": 0.41429999999991196
+    },
+    {
+      "word": "一棵",
+      "mode": "word",
+      "limit": 50,
+      "allEdges": false,
+      "nodes": 51,
+      "edges": 342,
+      "modelAndLayoutUnchanged": true,
+      "paintOrderMs": 0.22029999999995198
+    },
+    {
+      "word": "一棵",
+      "mode": "word",
+      "limit": 50,
+      "allEdges": true,
+      "nodes": 51,
+      "edges": 1183,
+      "modelAndLayoutUnchanged": true,
+      "paintOrderMs": 0.3894999999999982
+    },
+    {
+      "word": "树",
+      "mode": "noun",
+      "limit": 50,
+      "allEdges": false,
+      "nodes": 5,
+      "edges": 10,
+      "modelAndLayoutUnchanged": true,
+      "paintOrderMs": 0.022400000000061482
+    },
+    {
+      "word": "树",
+      "mode": "noun",
+      "limit": 50,
+      "allEdges": true,
+      "nodes": 5,
+      "edges": 10,
+      "modelAndLayoutUnchanged": true,
+      "paintOrderMs": 0.013500000000021828
+    },
+    {
+      "word": "树",
+      "mode": "word",
+      "limit": 50,
+      "allEdges": false,
+      "nodes": 51,
+      "edges": 338,
+      "modelAndLayoutUnchanged": true,
+      "paintOrderMs": 0.18699999999989814
+    },
+    {
+      "word": "树",
+      "mode": "word",
+      "limit": 50,
+      "allEdges": true,
+      "nodes": 51,
+      "edges": 1235,
+      "modelAndLayoutUnchanged": true,
+      "paintOrderMs": 0.37469999999984793
+    },
+    {
+      "word": "客厅",
+      "mode": "noun",
+      "limit": 50,
+      "allEdges": false,
+      "nodes": 2,
+      "edges": 1,
+      "modelAndLayoutUnchanged": true,
+      "paintOrderMs": 0.010200000000168075
+    },
+    {
+      "word": "客厅",
+      "mode": "noun",
+      "limit": 50,
+      "allEdges": true,
+      "nodes": 2,
+      "edges": 1,
+      "modelAndLayoutUnchanged": true,
+      "paintOrderMs": 0.0030999999999039574
+    },
+    {
+      "word": "客厅",
+      "mode": "word",
+      "limit": 50,
+      "allEdges": false,
+      "nodes": 51,
+      "edges": 337,
+      "modelAndLayoutUnchanged": true,
+      "paintOrderMs": 0.30920000000014625
+    },
+    {
+      "word": "客厅",
+      "mode": "word",
+      "limit": 50,
+      "allEdges": true,
+      "nodes": 51,
+      "edges": 1275,
+      "modelAndLayoutUnchanged": true,
+      "paintOrderMs": 0.4238999999997759
+    },
+    {
+      "word": "客厅",
+      "mode": "word",
+      "limit": 200,
+      "allEdges": false,
+      "nodes": 201,
+      "edges": 1476,
+      "modelAndLayoutUnchanged": true,
+      "paintOrderMs": 0.4920000000001892
+    },
+    {
+      "word": "客厅",
+      "mode": "word",
+      "limit": 200,
+      "allEdges": true,
+      "nodes": 201,
+      "edges": 19959,
+      "modelAndLayoutUnchanged": true,
+      "paintOrderMs": 4.366899999999987
+    },
+    {
+      "word": "客厅",
+      "mode": "word",
+      "limit": 400,
+      "allEdges": false,
+      "nodes": 401,
+      "edges": 2977,
+      "modelAndLayoutUnchanged": true,
+      "paintOrderMs": 3.038300000000163
+    },
+    {
+      "word": "客厅",
+      "mode": "word",
+      "limit": 400,
+      "allEdges": true,
+      "nodes": 401,
+      "edges": 79898,
+      "modelAndLayoutUnchanged": true,
+      "paintOrderMs": 73.20040000000154
+    }
+  ]
+}

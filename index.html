@@ -1,305 +1,71 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="基于 valid_common 与原始共现矩阵的中文量词及词汇语义网络。">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="完整语境 PPMI 余弦与量词搭配的语义网络研究工作台">
   <title>中文量词语义网络</title>
-  <link rel="stylesheet" href="style.css?v=20260905-1">
-  <script defer src="data/classifier_noun_data.js?v=20260823-1"></script>
-  <script defer src="data/classifier_similarity_data.js?v=20260823-1"></script>
-  <script defer src="data/word_network_nodes.js?v=20260827-2"></script>
-  <script defer src="data/word_network_edges.js?v=20260827-2"></script>
-  <script defer src="vendor/graphology.min.js?v=0.26.0"></script>
-  <script defer src="vendor/graphology-library.min.js?v=0.26.0"></script>
-  <script defer src="app.js?v=20260905-1"></script>
+  <link rel="stylesheet" href="workbench.css?v=20260929-3">
+  <script defer src="data/word_network_nodes.js"></script>
+  <script defer src="data/classifier_noun_data.js"></script>
+  <script defer src="semantic-core.js?v=20261005-1"></script>
+  <script defer src="semantic-motion.js?v=20260929-3"></script>
+  <script defer src="workbench.js?v=20261005-1"></script>
 </head>
 <body>
-  <div class="page-shell">
-    <header class="site-header">
-      <div>
-        <p class="eyebrow">FQL · EXPLORATORY SEMANTIC NETWORK</p>
-        <h1>中文量词语义网络</h1>
-        <p class="intro">从局部关系出发，探索量词之间的语义接近性、量词与名词的典型搭配，以及按词类定义的混合词汇关联。</p>
-      </div>
-      <div class="dataset-summary" aria-label="数据规模">
-        <span><strong id="classifierCount">—</strong> 个量词</span>
-        <span><strong id="similarityCount">—</strong> 条正相似关系</span>
-        <span><strong id="nounRelationCount">—</strong> 条量词—名词关系</span>
-        <span><strong id="wordCount">—</strong> 个词汇网络词项</span>
-      </div>
-    </header>
-
-    <main class="workspace">
-      <div class="tab-bar" role="tablist" aria-label="网络模块">
-        <button class="tab-button is-active" id="classifierTab" data-tab="classifier" role="tab" aria-selected="true">
-          量词—量词网络
-        </button>
-        <button class="tab-button" id="nounTab" data-tab="noun" role="tab" aria-selected="false">
-          量词—名词网络
-        </button>
-        <button class="tab-button" id="wordTab" data-tab="word" role="tab" aria-selected="false">
-          词汇网络
-        </button>
-      </div>
-
-      <section class="control-bar" aria-label="网络控制">
-        <form class="search-control" id="searchForm">
-          <label for="classifierSearch" id="searchLabel">搜索量词</label>
-          <div class="search-row">
-            <input id="classifierSearch" list="classifierOptions" autocomplete="off" placeholder="例如：一棵">
-            <datalist id="classifierOptions"></datalist>
-            <button type="submit">定位</button>
-          </div>
-          <p class="control-message" id="searchMessage" role="status" aria-live="polite"></p>
-        </form>
-
-        <div class="slider-control" id="similarityControl">
-          <div class="control-heading">
-            <label for="similaritySlider">Cosine similarity</label>
-            <label class="metric-select compact-select">连接指标
-              <select id="similarityMetric" aria-label="量词—量词连接指标">
-                <option value="cosine">Cosine similarity</option>
-              </select>
-            </label>
-          </div>
-          <div class="range-number-row">
-            <input id="similaritySlider" type="range" min="0" max="1" step="0.001" value="0">
-            <input id="similarityNumber" type="number" min="0" max="1" step="0.001" value="0" aria-label="Cosine similarity 精确阈值">
-          </div>
-          <p>显示 similarity ≥ 当前阈值的关系；数据本身仅包含正值。</p>
-        </div>
-
-        <div class="slider-control is-hidden" id="npmiControl">
-          <div class="control-heading">
-            <label for="nounMetric">连接指标</label>
-            <select id="nounMetric" aria-label="量词—名词连接指标">
-              <option value="score">NPMI_log_co_score</option>
-              <option value="npmi">NPMI</option>
-              <option value="pmi">PMI</option>
-              <option value="coOccurrence">Co-occurrence</option>
-            </select>
-          </div>
-          <label class="threshold-label" for="npmiSlider" id="nounThresholdLabel">NPMI_log_co_score 阈值</label>
-          <div class="range-number-row">
-            <input id="npmiSlider" type="range" min="0" max="1" step="0.01" value="1">
-            <input id="npmiNumber" type="number" min="0" max="1" step="0.01" value="1" aria-label="量词—名词精确阈值">
-          </div>
-          <p id="nounThresholdHelp">严格显示 NPMI_log_co_score ≤ 当前阈值的搭配。</p>
-        </div>
-
-        <fieldset class="topn-control is-hidden" id="topNControl">
-          <legend>显示数量</legend>
-          <div class="segmented-control">
-            <button type="button" data-topn="10" class="is-active">Top 10</button>
-            <button type="button" data-topn="20">Top 20</button>
-            <button type="button" data-topn="50">Top 50</button>
-          </div>
-        </fieldset>
-
-        <section class="word-controls is-hidden" id="wordControls" aria-label="词汇网络修剪与视觉编码">
-          <div class="word-threshold-grid">
-            <label>PMI threshold
-              <span class="range-number-row">
-                <input id="wordPmiSlider" type="range" min="-30" max="30" step="0.01" value="3">
-                <input id="wordPmiNumber" type="number" min="-30" max="30" step="0.01" value="3">
-              </span>
-            </label>
-            <label title="滑条采用按实际分布校准的非线性刻度：低频区变化更慢，高频区变化更快。">Co-occurrence threshold（非线性）
-              <span class="range-number-row">
-                <input id="wordCoSlider" type="range" min="0" max="1000" step="1" value="365" aria-label="Co-occurrence threshold 非线性滑条">
-                <input id="wordCoNumber" type="number" min="1" max="26021095" step="1" value="30">
-              </span>
-            </label>
-            <label title="非线性刻度：前半段精细覆盖 Degree 1–100，后半段对数覆盖 100–400。">Degree threshold（非线性）
-              <span class="range-number-row">
-                <input id="wordDegreeSlider" type="range" min="0" max="1000" step="1" value="10" aria-label="Degree threshold 非线性滑条">
-                <input id="wordDegreeNumber" type="number" min="1" max="400" step="1" value="3">
-              </span>
-            </label>
-          </div>
-          <div class="word-metric-grid">
-            <label>节点距离依据
-              <select id="wordDistanceMetric">
-                <option value="pmi">PMI</option>
-                <option value="coOccurrence">Co-occurrence</option>
-                <option value="npmi">NPMI</option>
-                <option value="score">NPMI_log_co_score</option>
-              </select>
-            </label>
-            <label>边宽依据
-              <select id="wordWidthMetric">
-                <option value="coOccurrence">Co-occurrence</option>
-                <option value="pmi">PMI</option>
-                <option value="npmi">NPMI</option>
-                <option value="score">NPMI_log_co_score</option>
-              </select>
-            </label>
-            <label>节点大小依据
-              <select id="wordSizeMetric">
-                <option value="currentDegree">Current Degree</option>
-                <option value="fullDegree">Full Degree</option>
-                <option value="coWithTarget">Co-occurrence with current target</option>
-                <option value="betweenness">Betweenness（未计算）</option>
-                <option value="closeness">Closeness（未计算）</option>
-                <option value="eigenvector">Eigenvector</option>
-                <option value="clustering">Clustering</option>
-              </select>
-            </label>
-            <label>最强关联词排序
-              <select id="wordRankMetric">
-                <option value="pmi">PMI</option>
-                <option value="coOccurrence">Co-occurrence</option>
-                <option value="npmi">NPMI</option>
-                <option value="score">NPMI_log_co_score</option>
-              </select>
-            </label>
-            <label class="community-control" title="局部 Community 根据当前目标词与当前 PMI、共现次数、Degree 筛选后的可见网络实时计算；全局 Community 来自完整词汇网络的预计算结果。">Community
-              <select id="wordCommunityMode">
-                <option value="local">局部 Community</option>
-                <option value="global">全局 Community</option>
-              </select>
-              <small class="control-help">ⓘ 局部模式随 TARGET 与筛选条件更新；全局模式跨 TARGET 固定。</small>
-            </label>
-          </div>
-        </section>
-
-        <label class="label-control">标签显示
-          <select id="labelMode">
-            <option value="important">重要节点</option>
-            <option value="all">全部</option>
-            <option value="hover">仅悬停</option>
-          </select>
-        </label>
-      </section>
-
-      <div class="content-grid">
-        <section class="graph-card" aria-labelledby="graphTitle">
-          <div class="graph-toolbar">
-            <div>
-              <p class="section-kicker" id="graphModeLabel">量词—量词局部网络</p>
-              <h2 id="graphTitle">—</h2>
-            </div>
-            <div class="graph-actions">
-              <div class="legend" aria-label="图例">
-                <span><i class="legend-dot classifier-dot"></i>量词</span>
-                <span id="nounLegend" class="is-hidden"><i class="legend-dot noun-dot"></i>名词</span>
-              </div>
-              <button type="button" class="secondary-button" id="relayoutView">重新布局</button>
-              <button type="button" class="secondary-button" id="resetView">重置视图</button>
-            </div>
-          </div>
-
-          <div class="network-stats" id="networkStats" aria-live="polite"></div>
-
-          <div class="graph-stage" id="graphStage">
-            <svg id="networkSvg" role="img" aria-labelledby="graphTitle graphDescription">
-              <desc id="graphDescription">可缩放、平移、拖动并点击节点的局部语义网络。</desc>
-              <g id="networkViewport">
-                <g id="edgeLayer"></g>
-                <g id="nodeLayer"></g>
-              </g>
-            </svg>
-            <div class="graph-empty is-hidden" id="graphEmpty"></div>
-            <div class="tooltip is-hidden" id="tooltip" role="tooltip"></div>
-            <details class="encoding-legend" id="encodingLegend">
-              <summary>图例</summary>
-              <div id="legendContent"></div>
-            </details>
-            <p class="interaction-hint">滚轮缩放 · 拖动空白处平移 · 拖动节点调整位置 · 点击节点继续探索</p>
-          </div>
-        </section>
-
-        <aside class="info-panel" id="infoPanel" aria-live="polite">
-          <p class="section-kicker">当前节点信息</p>
-          <h2 id="infoTitle">—</h2>
-          <div class="metric-card" id="primaryMetric"></div>
-          <div class="threshold-note is-hidden" id="thresholdNote"></div>
-          <div id="infoSections"></div>
-        </aside>
-      </div>
-    </main>
-
-    <footer class="site-footer">
-      <p>固定节点统计来自完整数据；词汇网络先限定合法关系，再按每个词的 NPMI_log_co_score Top 400 建立当前 1-hop 诱导子图。</p>
-      <button type="button" class="star-entry-button" id="openStarMap">
-        <span aria-hidden="true">✦</span>
-        进入星图测试
-      </button>
-    </footer>
+<header class="masthead"><div><span class="project-mark">量词研究</span><h1>中文量词语义网络</h1></div><span class="edition">完整语境 · 本地研究版</span></header>
+<nav class="tabs" aria-label="网络类型">
+  <button data-mode="classifier" aria-pressed="true">量词—量词</button>
+  <button data-mode="noun" aria-pressed="false">量词—名词</button>
+  <button data-mode="word" aria-pressed="false">词汇网络</button>
+  <span>从一个词，理解词与词的联系</span>
+</nav>
+<main class="workbench">
+<aside class="filters"><details open id="filterPanel"><summary>检索与筛选</summary>
+  <form id="searchForm"><label for="search">中心词</label><div class="search-line"><input id="search" list="suggestions" value="一棵" autocomplete="off" placeholder="输入词语" required><button type="submit">查看</button></div><datalist id="suggestions"></datalist></form>
+  <p class="hint" id="modeHint">比较量词的语境相似性。</p>
+  <div class="field"><label for="limit">邻居数量</label><select id="limit"><option>20</option><option selected>50</option><option>100</option><option>200</option><option>400</option></select></div>
+  <div class="field"><label for="co">最低共现次数</label><input id="co" type="number" min="0" step="0.5" value="0"></div>
+  <input id="coSlider" type="range" min="0" max="1000" step="1" value="0" aria-label="共现次数非线性滑条">
+  <div class="field"><label class="check"><input id="pmiEnabled" type="checkbox">启用最低 PMI</label><input aria-label="最低 PMI" id="pmi" type="number" value="3" step="0.1" disabled></div>
+  <input id="pmiSlider" type="range" min="-30" max="30" step="0.1" value="3" disabled aria-label="PMI 阈值滑条">
+  <div class="field"><label for="similarity">最低相似性</label><input id="similarity" type="number" min="0" max="1" step="0.001" value="0"></div>
+  <input id="similaritySlider" type="range" min="0" max="1" step="0.001" value="0" aria-label="相似性阈值滑条">
+  <div class="field"><label for="degree">节点最低度数（Degree）</label><input id="degree" type="number" min="0" max="400" step="1" value="0"></div>
+  <input id="degreeSlider" type="range" min="0" max="1000" step="1" value="0" aria-label="度数非线性滑条">
+  <p class="hint">先按数量截取，再按全部合格边计算度数，一次性裁剪；不是反复剥离的 k-core。中心始终保留，显示最强 8 条不会改变裁剪口径。</p>
+  <label class="check"><input type="checkbox" id="includeZero" checked>包含零共现相似关系</label>
+  <p class="hint">零共现关系不豁免筛选：共现下限大于 0，或启用 PMI、NPMI、关联分数筛选时，它们会被排除。</p>
+  <details class="minor"><summary>其他裁剪条件</summary>
+    <div class="field"><label class="check"><input id="scoreEnabled" type="checkbox">启用旧关联分数上限</label><input id="scoreMax" type="number" step="0.01" value="1" disabled aria-label="旧关联分数上限"></div>
+    <input id="scoreSlider" type="range" min="-10" max="20" step="0.01" value="1" disabled aria-label="关联分数上限滑条">
+    <p class="hint">保留 NPMI × ln(共现) ≤ 上限的关系，沿用旧版的上限方向；只筛选，不改变点、边的编码。</p>
+    <div class="field"><label class="check"><input id="npmiEnabled" type="checkbox">启用最低 NPMI</label><input id="npmiMin" type="number" min="-1" max="1" step="0.001" value="0" disabled aria-label="最低 NPMI"></div>
+    <p class="hint">旧版 NPMI 仅排序，未定义裁剪方向。这里明确新增为下限筛选，默认关闭。</p>
+    <label class="check"><input id="hideUnpaired" type="checkbox">词汇图隐藏无名词搭配的外围量词</label>
+    <button id="legacyFilters" type="button">应用旧词汇图阈值</button><button id="clearFilters" type="button">清除裁剪</button>
+    <p class="hint">旧词汇图预设：PMI ≥ 3、共现 ≥ 30、Degree ≥ 3，并隐藏无合法名词搭配的外围量词。</p>
+  </details>
+  <h2>显示</h2>
+  <label for="allEdges">外围关系</label><select id="allEdges"><option value="false">每个节点最强 8 条的并集</option><option value="true">全部合格关系</option></select>
+  <p class="hint">“全部”不截边；布局始终使用最强 8 条关系骨架，避免密集边把图挤成一团。</p>
+  <div class="field"><label for="width">边宽 <output id="widthValue">1 px</output></label><input id="width" type="range" min="0.5" max="3" step="0.1" value="1"></div>
+  <label for="labels">词语标签</label><select id="labels"><option value="important">中心与重点词</option><option value="all">全部</option><option value="hover">仅悬停时</option></select>
+  <label class="check"><input id="motion" type="checkbox" checked>布局动效</label>
+  <label for="rankMetric">详情关联词排序</label><select id="rankMetric"><option value="similarity">语境相似性</option><option value="pmi">PMI</option><option value="coOccurrence">共现次数</option><option value="npmi">NPMI</option><option value="score">旧关联分数</option></select>
+  <details class="minor"><summary>计算方法</summary><p>相似性：完整原始语境的 PPMI 向量余弦；不降维。量词与名词分别聚类，中心不参与分组。固定 5 个随机种子，选取模块度最高的结果。</p><label for="resolution">社区分辨率</label><input id="resolution" type="number" min="0.1" max="3" step="0.1" value="1"><p id="dataDefinition"></p><a href="SEMANTIC_V2.md" target="_blank">方法与复现说明 ↗</a></details>
+  <details class="minor"><summary>旧版对照</summary><p>旧搭配余弦和旧全局社区仅作历史对照，与新版不可直接混合比较。</p><a href="legacy.html" target="_blank" rel="noopener">打开旧版页面 ↗</a><p id="legacySummary">选择词语后可查看旧社区编号。</p></details>
+</details></aside>
+<section class="graph-panel" aria-label="语义网络画布">
+  <div class="graph-heading"><div><h2 id="centerTitle">一棵</h2><p id="graphStats">准备数据…</p><p id="pruneStats"></p></div><div class="view-actions"><button id="relayout">重新布局</button><button id="zoomOut" aria-label="缩小">−</button><button id="fit">适应画布</button><button id="zoomIn" aria-label="放大">＋</button></div></div>
+  <div id="stage" tabindex="0" aria-label="网络，可拖动平移、滚轮缩放；方向键平移，按 0 复位">
+    <canvas id="edges" aria-hidden="true"></canvas><svg id="network" aria-label="节点"><g id="viewport"></g></svg>
+    <div id="status" role="status" aria-live="polite">正在读取新版数据…</div><button id="retry" hidden>重新加载</button>
+    <div class="interaction-note">拖动平移 · 滚轮缩放 · 点击节点切换中心</div>
   </div>
-
-  <section class="star-map is-hidden" id="starMap" aria-hidden="true" aria-labelledby="starMapTitle">
-    <header class="star-map-header">
-      <button type="button" class="star-round-button" id="closeStarMap" aria-label="返回语义网络">
-        <span aria-hidden="true">←</span>
-      </button>
-      <div class="star-map-heading">
-        <p>FQL · SEMANTIC CONSTELLATION</p>
-        <h2 id="starMapTitle">词汇星图</h2>
-      </div>
-      <details class="star-rule-menu" id="starRuleMenu">
-        <summary aria-label="查看星图规则"><span aria-hidden="true">•••</span></summary>
-        <div>
-          <p class="star-rule-title">固定观察条件</p>
-          <p>共现次数 &gt; 100</p>
-          <p>PMI &gt; 3</p>
-          <p>Degree &gt; 2</p>
-          <small>Degree 按 1-hop 诱导子图的一次性修剪口径计算。条件不可修改；中心词作为探索锚点始终保留。</small>
-        </div>
-      </details>
-    </header>
-
-    <div class="star-stage" id="starStage">
-      <svg id="starSvg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="starMapTitle starMapDescription">
-        <desc id="starMapDescription">以当前词汇网络目标词为中心，可拖动、缩放并点击节点继续探索的语义星图。</desc>
-        <defs>
-          <radialGradient id="starCenterGradient">
-            <stop offset="0" stop-color="#fff8dc"></stop>
-            <stop offset="0.34" stop-color="#f2c791"></stop>
-            <stop offset="1" stop-color="#ad674a"></stop>
-          </radialGradient>
-          <radialGradient id="starNounGradient">
-            <stop offset="0" stop-color="#fff7d7"></stop>
-            <stop offset="0.45" stop-color="#d9ae73"></stop>
-            <stop offset="1" stop-color="#72543f"></stop>
-          </radialGradient>
-          <radialGradient id="starClassifierGradient">
-            <stop offset="0" stop-color="#e8fbff"></stop>
-            <stop offset="0.42" stop-color="#7fb4bd"></stop>
-            <stop offset="1" stop-color="#365966"></stop>
-          </radialGradient>
-        </defs>
-        <g id="starViewport">
-          <g id="starField">
-            <g id="starOrbitLayer">
-              <ellipse class="star-orbit" cx="600" cy="400" rx="175" ry="108"></ellipse>
-              <ellipse class="star-orbit" cx="600" cy="400" rx="310" ry="185" transform="rotate(-12 600 400)"></ellipse>
-              <ellipse class="star-orbit" cx="600" cy="400" rx="465" ry="265" transform="rotate(9 600 400)"></ellipse>
-            </g>
-            <g id="starEdgeLayer"></g>
-            <g id="starNodeLayer">
-              <g class="star-node center" transform="translate(600 400)">
-                <circle class="star-node-halo" r="42"></circle>
-                <circle class="star-node-core" r="15" fill="url(#starCenterGradient)"></circle>
-                <path class="star-center-mark" d="M0,-9 C2,-3 3,-2 9,0 C3,2 2,3 0,9 C-2,3 -3,2 -9,0 C-3,-2 -2,-3 0,-9Z"></path>
-              </g>
-            </g>
-          </g>
-        </g>
-      </svg>
-      <div class="star-loading is-hidden" id="starLoading" role="status" aria-live="polite">
-        <span aria-hidden="true"></span>
-        <p>正在汇聚当前词语的星轨……</p>
-      </div>
-      <div class="star-empty is-hidden" id="starEmpty" role="status"></div>
-      <div class="star-status-card" id="starStatus" aria-live="polite">
-        <p class="star-status-counts">—</p>
-        <p>悬停查看相邻词 · 点击星体切换中心 · 拖动星体或空白处移动星图</p>
-      </div>
-    </div>
-  </section>
-
-  <noscript>此网页需要启用 JavaScript 才能显示交互网络。</noscript>
-</body>
-</html>
+  <div class="legend"><span>△ 量词　○ 名词</span><span>面积：与中心的共现</span><span>远近：语境相似性</span><span>边深浅：PMI</span><span>颜色：外围语义社区</span><div id="pmiLegend" aria-label="固定 PMI 颜色标尺"></div><p>PMI 明暗采用固定非线性曲线；浅色关系仍参与计算，不因淡化而删除。要按 PMI 移除关系，请启用“最低 PMI”筛选。</p><p>面积采用固定对数标尺；中心带外圈，不参与大小比较。虚线／空心表示共现 0、PMI 不可用，不代表低 PMI。实际距离还受碰撞及其他关系约束，并非精确测距。</p></div>
+</section>
+<aside class="inspector"><details open id="detailPanel"><summary>词语详情</summary><div id="details"><p class="hint">悬停或用键盘聚焦节点查看指标。</p></div></details></aside>
+</main>
+<footer><span id="footerStatus">三张图共用指标与固定视觉标尺</span><button id="openStar">星图 · 试验视图 ↗</button></footer>
+<div id="starHost" hidden><button id="starEscape">返回网络</button></div>
+</body></html>

@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "completeRows": 23231,
+  "contextCount": 140325,
+  "sampleCount": 24,
+  "maxCosineError": 3.1086244689504383e-15,
+  "crossChecks": 6459,
+  "largestCo": 2667884.0,
+  "originalMetricsUnchanged": true
+}
