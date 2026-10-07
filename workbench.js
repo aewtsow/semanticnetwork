@@ -6,13 +6,14 @@
   const state={mode:'classifier',center:ids.get('一棵'),wordCenter:ids.get('一棵'),classifierCenter:ids.get('一棵'),
     graph:null,paintEdges:[],manifest:null,worker:null,busy:false,token:0,view:{x:0,y:0,k:1},hover:null,drag:null,
     colors:new Map(),buildCount:0,frame:0,star:null,animation:null,ghosts:[],motionFrames:0,layoutSeed:0,resetLayout:false,inspected:null};
-  const palette=['#648d7d','#8795b0','#b7a170','#a98792','#8b9d69','#a58767','#719ca4','#9d94b3','#bb8e7e','#9fa573'];
+  const palette=['#2563eb','#e11d48','#059669','#9333ea','#ea580c','#0891b2','#ca8a04','#c026d3','#65a30d','#4f46e5','#0d9488','#a16207','#be123c','#7c3aed','#0284c7','#15803d'];
   const svg=(tag,attrs={})=>{const e=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);return e;};
   const el=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;};
   const fmt=(v,d=3)=>v===null||v===undefined?'不可用':Number(v).toLocaleString('zh-CN',{maximumFractionDigits:d});
   function config(){return {limit:Number($('limit').value),co:Number($('co').value),
     pmi:$('pmiEnabled').checked?Number($('pmi').value):null,similarity:Number($('similarity').value),
     includeZero:$('includeZero').checked,allEdges:$('allEdges').value==='true',resolution:Number($('resolution').value),
+    peripheralMode:$('allEdges').value==='custom'?'custom':'default',peripheralSimilarity:Number($('peripheralSimilarity').value),peripheralTopK:Number($('peripheralTopK').value),
     degree:Number($('degree').value),npmiMin:$('npmiEnabled').checked?Number($('npmiMin').value):null,
     scoreMax:$('scoreEnabled').checked?Number($('scoreMax').value):null,hideUnpaired:state.mode==='word'&&$('hideUnpaired').checked};}
   function message(text,error=false){$('status').textContent=text;$('retry').hidden=!error;}
@@ -23,7 +24,7 @@
   }
   let pendingBuild;
   function makeWorker(){
-    const worker=new Worker('semantic-worker.js?v=20261006-1');
+    const worker=new Worker('semantic-worker.js?v=20261007-1');
     state.worker=worker;
     worker.postMessage({type:'init',nodes,pairs,manifest:state.manifest});
     worker.onmessage=({data})=>{
@@ -69,6 +70,7 @@
   async function buildNow(){
     if(!state.manifest){await initialize();return;}
     for(const id of ['co','pmi','similarity','resolution','degree','npmiMin','scoreMax'])if(!$(id).checkValidity()){ $(id).reportValidity();return; }
+    if($('allEdges').value==='custom')for(const id of ['peripheralSimilarity','peripheralTopK'])if(!$(id).checkValidity()){$(id).reportValidity();return;}
     // A new center can interrupt even a synchronous Louvain/layout computation.
     // Completed workers retain their LRU; only an in-flight stale job is terminated.
     if(state.busy){state.worker.terminate();state.worker=null;}
@@ -256,6 +258,9 @@
     $('scoreMax').disabled=$('scoreSlider').disabled=!$('scoreEnabled').checked;
     $('npmiMin').disabled=!$('npmiEnabled').checked;
     $('hideUnpaired').disabled=state.mode!=='word';
+    const custom=$('allEdges').value==='custom';
+    $('customPeripheral').hidden=!custom;
+    $('peripheralSimilarity').disabled=$('peripheralTopK').disabled=!custom;
     const ceiling=state.manifest?.coAreaCeiling||26021095;
     $('coSlider').value=1000*(Math.log1p(Math.max(0,Number($('co').value)))/Math.log1p(ceiling))**(1/1.6);
     const degree=Number($('degree').value);
@@ -278,8 +283,8 @@
       $('search').value=nodes[state.center].id;
       syncControls();suggestions();void build();
     });
-    for(const id of ['limit','co','pmiEnabled','pmi','similarity','includeZero','allEdges','resolution','degree','npmiEnabled','npmiMin','scoreEnabled','scoreMax','hideUnpaired'])$(id).onchange=()=>{syncControls();void build();};
-    for(const id of ['co','pmi','similarity','resolution','degree','npmiMin','scoreMax'])$(id).oninput=()=>{syncControls();if($(id).value!==''&&$(id).checkValidity())build();};
+    for(const id of ['limit','co','pmiEnabled','pmi','similarity','includeZero','allEdges','peripheralSimilarity','peripheralTopK','resolution','degree','npmiEnabled','npmiMin','scoreEnabled','scoreMax','hideUnpaired'])$(id).onchange=()=>{syncControls();void build();};
+    for(const id of ['co','pmi','similarity','resolution','degree','npmiMin','scoreMax','peripheralSimilarity','peripheralTopK'])$(id).oninput=()=>{syncControls();if($(id).value!==''&&$(id).checkValidity())build();};
     const sliderChange=(id,number,convert)=>$(id).oninput=()=>{$(number).value=convert(Number($(id).value));syncControls();build();};
     sliderChange('coSlider','co',x=>Math.round(Math.expm1(Math.log1p(state.manifest?.coAreaCeiling||26021095)*(x/1000)**1.6)*2)/2);
     sliderChange('degreeSlider','degree',x=>Math.round(x<=500?x/5:100*4**((x-500)/500)));

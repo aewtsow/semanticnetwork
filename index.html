@@ -7,12 +7,12 @@
   <link rel="stylesheet" href="workbench.css?v=20260929-3">
   <script defer src="data/word_network_nodes.js"></script>
   <script defer src="data/classifier_noun_data.js"></script>
-  <script defer src="semantic-core.js?v=20261005-1"></script>
+  <script defer src="semantic-core.js?v=20261007-1"></script>
   <script defer src="semantic-motion.js?v=20260929-3"></script>
-  <script defer src="workbench.js?v=20261006-1"></script>
+  <script defer src="workbench.js?v=20261007-1"></script>
 </head>
 <body>
-<header class="masthead"><div><span class="project-mark">量词研究</span><h1>中文量词语义网络</h1></div><span class="edition">完整语境 · 本地研究版</span></header>
+<header class="masthead"><div><span class="project-mark">量词研究</span><h1>中文量词语义网络</h1></div><span class="edition">完整语境 · 语义研究工作台</span></header>
 <nav class="tabs" aria-label="网络类型">
   <button data-mode="classifier" aria-pressed="true">量词—量词</button>
   <button data-mode="noun" aria-pressed="false">量词—名词</button>
@@ -46,8 +46,14 @@
     <p class="hint">旧词汇图预设：PMI ≥ 3、共现 ≥ 30、Degree ≥ 3，并隐藏无合法名词搭配的外围量词。</p>
   </details>
   <h2>显示</h2>
-  <label for="allEdges">外围关系</label><select id="allEdges"><option value="false">每个节点最强 8 条的并集</option><option value="true">全部合格关系</option></select>
-  <p class="hint">“全部”不截边；布局始终使用最强 8 条关系骨架，避免密集边把图挤成一团。</p>
+  <label for="allEdges">外围关系</label><select id="allEdges" aria-describedby="peripheralHelp"><option value="false">每个节点最强 8 条的并集</option><option value="true">全部合格关系</option><option value="custom">自定义合格关系</option></select>
+  <p class="hint" id="peripheralHelp">外围关系指非中心节点之间的连线。默认按相似性为每个节点选出最强 8 条，再合并去重；任一端选中就显示，所以某个节点可超过 8 条。不是按 PMI 排序。</p>
+  <div id="customPeripheral" hidden>
+    <div class="field"><label for="peripheralSimilarity">外围相似性阈值（严格大于）</label><input id="peripheralSimilarity" type="number" min="0" max="1" step="0.01" value="0.8" required disabled aria-describedby="customPeripheralHelp"></div>
+    <div class="field"><label for="peripheralTopK">每个节点最强 X 条的并集</label><input id="peripheralTopK" type="number" min="1" max="400" step="1" value="8" required disabled aria-describedby="customPeripheralHelp"></div>
+    <p class="hint" id="customPeripheralHelp">先保留相似性严格大于阈值的外围关系，再为每个节点取最强 X 条并合并。没有达到阈值的连接就不显示，不补足 X 条。</p>
+  </div>
+  <p class="hint">三种模式仅控制外围连线的显示，不删除节点，不改变中心连线、度数裁剪、聚类和布局计算口径。“全部”显示通过上方筛选的所有外围关系；聚类与布局仍使用固定的最强 8 条关系骨架。图中“外围关系”计数为显示数 / 上方筛选后总数。</p>
   <div class="field"><label for="width">边宽 <output id="widthValue">1 px</output></label><input id="width" type="range" min="0.5" max="3" step="0.1" value="1"></div>
   <label for="labels">词语标签</label><select id="labels"><option value="important">中心与重点词</option><option value="all">全部</option><option value="hover">仅悬停时</option></select>
   <label class="check"><input id="motion" type="checkbox" checked>布局动效</label>

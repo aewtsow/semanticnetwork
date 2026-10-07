@@ -95,6 +95,17 @@
     for(const [id,g] of Object.entries(partition)){if(!groups.has(g))groups.set(g,[]);groups.get(g).push(Number(id));}
     return [...groups.values()].map(a=>a.sort((x,y)=>x-y)).sort((a,b)=>a[0]-b[0]);
   }
+  // Display-only filter: threshold FIRST, then take the union of each endpoint's
+  // strongest X eligible edges. Never feed this selection into pruning/clustering.
+  function peripheralDisplay(edges,config) {
+    if(config.peripheralMode==='custom') {
+      const threshold=Number(config.peripheralSimilarity),limit=Number(config.peripheralTopK);
+      if(!Number.isFinite(threshold)||threshold<0||threshold>1||!Number.isInteger(limit)||limit<1||limit>400)
+        throw Error('外围相似性阈值须在 0–1 之间，最强条数须为 1–400 的整数');
+      return sparsify(edges.filter(e=>Number.isFinite(e.similarity)&&e.similarity>threshold),limit);
+    }
+    return sparsify(edges,config.allEdges?0:8);
+  }
   function communities(ids,edges,nodes,Graph,louvain,resolution=1) {
     const assignments={},groups=[],trials=[];
     for(const type of ['classifier','noun']) {
@@ -150,11 +161,11 @@
     const eligibleDegree=new Map(indices.map(i=>[i,0]));
     for(const e of [...selected,...peripheral])for(const i of [e.source,e.target])eligibleDegree.set(i,eligibleDegree.get(i)+1);
     const community=communities(indices.slice(1),peripheral,nodes,Graph,louvain,config.resolution);
-    const visible=sparsify(peripheral,config.allEdges?0:8);
+    const visible=peripheralDisplay(peripheral,config);
     const edges=[...selected,...visible].map(e=>({...e,...encoding(e.coOccurrence,e.pmi,e.similarity,manifest.coAreaCeiling)}));
     // Displaying every relation must not multiply the layout's inward force.
     // The same explicitly documented top-8 scaffold drives both display modes.
-    const layoutEdges=config.allEdges?[...selected,...sparsify(peripheral,8)].map(e=>({...e,...encoding(e.coOccurrence,e.pmi,e.similarity,manifest.coAreaCeiling)})):edges;
+    const layoutEdges=[...selected,...sparsify(peripheral,8)].map(e=>({...e,...encoding(e.coOccurrence,e.pmi,e.similarity,manifest.coAreaCeiling)}));
     const byNeighbor=new Map(selected.map(e=>[e.neighbor,e]));
     const visibleDegree=new Map(indices.map(i=>[i,0]));
     for(const e of edges)for(const i of [e.source,e.target])visibleDegree.set(i,visibleDegree.get(i)+1);
@@ -236,6 +247,6 @@
     for(const n of ns)positions.set(n.index,{x:n.x,y:n.y});
     return positions;
   }
-  root.SemanticCore={clamp,pairKey,rng,encoding,paintOrder,pairsIndex,relation,passes,candidates,sparsify,communities,construct,layout};
+  root.SemanticCore={clamp,pairKey,rng,encoding,paintOrder,pairsIndex,relation,passes,candidates,sparsify,peripheralDisplay,communities,construct,layout};
   if(typeof module!=='undefined')module.exports=root.SemanticCore;
 })(typeof self!=='undefined'?self:globalThis);

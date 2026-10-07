@@ -1,6 +1,6 @@
-"""Build an isolated static preview from SHA-pinned GitHub Release assets.
+"""Build a static site from SHA-pinned GitHub Release assets.
 
-No dependencies, tokens, remote computation or production deployment required.
+No dependencies, tokens or remote scientific computation required.
 Archives contain individually compressed rows; output never includes raw f64 rows.
 """
 from pathlib import Path
@@ -22,8 +22,8 @@ RUNTIME_FILES = ['index.html', 'legacy.html', 'app.js', 'style.css', 'workbench.
 
 
 def build(output, local_assets=None):
-    if os.environ.get('VERCEL_ENV') == 'production':
-        raise RuntimeError('Preview-only branch: refusing a production build. Existing live site stays unchanged.')
+    if os.environ.get('VERCEL_ENV') == 'production' and os.environ.get('VERCEL_GIT_COMMIT_REF') != 'main':
+        raise RuntimeError('Production builds must originate from the main branch.')
     output = output.resolve()
     if output == BASE or BASE not in output.parents:
         raise ValueError('Output must be a new subdirectory of this project')
@@ -115,7 +115,8 @@ def build(output, local_assets=None):
     manifest['transport'] = dict(codec=lock['codec'], version=lock['tag'], byteExact=True, rawDtype='float64-le')
     (destination/'manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n', encoding='utf-8')
     report = dict(sourceVersion=manifest['version'], release=lock['tag'], rowCount=lock['rows'],
-                  packedBytes=lock['packedRowBytes'], rawBytes=lock['rawBytes'], byteExact=True, previewOnly=True)
+                  packedBytes=lock['packedRowBytes'], rawBytes=lock['rawBytes'], byteExact=True,
+                  environment=os.environ.get('VERCEL_ENV', 'local'), commit=os.environ.get('VERCEL_GIT_COMMIT_SHA'))
     (output/'release-build.json').write_text(json.dumps(report,indent=2)+'\n', encoding='utf-8')
     print(json.dumps({'complete': True, 'output': str(output), **report}),flush=True)
 

@@ -1,0 +1,196 @@
+{
+  "date": "2026-10-07",
+  "strictThreshold": true,
+  "filterBeforeTopK": true,
+  "cases": [
+    {
+      "word": "一棵",
+      "mode": "classifier",
+      "threshold": 0.8,
+      "topK": 8,
+      "nodes": 51,
+      "peripheral": 0,
+      "modelAndLayoutPreserved": true
+    },
+    {
+      "word": "一棵",
+      "mode": "classifier",
+      "threshold": 0.2,
+      "topK": 1,
+      "nodes": 51,
+      "peripheral": 38,
+      "modelAndLayoutPreserved": true
+    },
+    {
+      "word": "一棵",
+      "mode": "classifier",
+      "threshold": 1,
+      "topK": 400,
+      "nodes": 51,
+      "peripheral": 0,
+      "modelAndLayoutPreserved": true
+    },
+    {
+      "word": "一棵",
+      "mode": "noun",
+      "threshold": 0.8,
+      "topK": 8,
+      "nodes": 51,
+      "peripheral": 0,
+      "modelAndLayoutPreserved": true
+    },
+    {
+      "word": "一棵",
+      "mode": "noun",
+      "threshold": 0.2,
+      "topK": 1,
+      "nodes": 51,
+      "peripheral": 43,
+      "modelAndLayoutPreserved": true
+    },
+    {
+      "word": "一棵",
+      "mode": "noun",
+      "threshold": 1,
+      "topK": 400,
+      "nodes": 51,
+      "peripheral": 0,
+      "modelAndLayoutPreserved": true
+    },
+    {
+      "word": "一棵",
+      "mode": "word",
+      "threshold": 0.8,
+      "topK": 8,
+      "nodes": 51,
+      "peripheral": 0,
+      "modelAndLayoutPreserved": true
+    },
+    {
+      "word": "一棵",
+      "mode": "word",
+      "threshold": 0.2,
+      "topK": 1,
+      "nodes": 51,
+      "peripheral": 43,
+      "modelAndLayoutPreserved": true
+    },
+    {
+      "word": "一棵",
+      "mode": "word",
+      "threshold": 1,
+      "topK": 400,
+      "nodes": 51,
+      "peripheral": 0,
+      "modelAndLayoutPreserved": true
+    },
+    {
+      "word": "树",
+      "mode": "noun",
+      "threshold": 0.8,
+      "topK": 8,
+      "nodes": 5,
+      "peripheral": 0,
+      "modelAndLayoutPreserved": true
+    },
+    {
+      "word": "树",
+      "mode": "noun",
+      "threshold": 0.2,
+      "topK": 1,
+      "nodes": 5,
+      "peripheral": 3,
+      "modelAndLayoutPreserved": true
+    },
+    {
+      "word": "树",
+      "mode": "noun",
+      "threshold": 1,
+      "topK": 400,
+      "nodes": 5,
+      "peripheral": 0,
+      "modelAndLayoutPreserved": true
+    },
+    {
+      "word": "树",
+      "mode": "word",
+      "threshold": 0.8,
+      "topK": 8,
+      "nodes": 51,
+      "peripheral": 0,
+      "modelAndLayoutPreserved": true
+    },
+    {
+      "word": "树",
+      "mode": "word",
+      "threshold": 0.2,
+      "topK": 1,
+      "nodes": 51,
+      "peripheral": 40,
+      "modelAndLayoutPreserved": true
+    },
+    {
+      "word": "树",
+      "mode": "word",
+      "threshold": 1,
+      "topK": 400,
+      "nodes": 51,
+      "peripheral": 0,
+      "modelAndLayoutPreserved": true
+    },
+    {
+      "word": "客厅",
+      "mode": "noun",
+      "threshold": 0.8,
+      "topK": 8,
+      "nodes": 2,
+      "peripheral": 0,
+      "modelAndLayoutPreserved": true
+    },
+    {
+      "word": "客厅",
+      "mode": "noun",
+      "threshold": 0.2,
+      "topK": 1,
+      "nodes": 2,
+      "peripheral": 0,
+      "modelAndLayoutPreserved": true
+    },
+    {
+      "word": "客厅",
+      "mode": "noun",
+      "threshold": 1,
+      "topK": 400,
+      "nodes": 2,
+      "peripheral": 0,
+      "modelAndLayoutPreserved": true
+    },
+    {
+      "word": "客厅",
+      "mode": "word",
+      "threshold": 0.8,
+      "topK": 8,
+      "nodes": 51,
+      "peripheral": 0,
+      "modelAndLayoutPreserved": true
+    },
+    {
+      "word": "客厅",
+      "mode": "word",
+      "threshold": 0.2,
+      "topK": 1,
+      "nodes": 51,
+      "peripheral": 42,
+      "modelAndLayoutPreserved": true
+    },
+    {
+      "word": "客厅",
+      "mode": "word",
+      "threshold": 1,
+      "topK": 400,
+      "nodes": 51,
+      "peripheral": 0,
+      "modelAndLayoutPreserved": true
+    }
+  ]
+}

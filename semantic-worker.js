@@ -1,5 +1,5 @@
 'use strict';
-importScripts('vendor/graphology-worker-adapter.js?v=20260929-3','semantic-core.js?v=20261005-1','semantic-row-codec.js?v=20261006-1');
+importScripts('vendor/graphology-worker-adapter.js?v=20260929-3','semantic-core.js?v=20261007-1','semantic-row-codec.js?v=20261006-1');
 let nodes,pairs,manifest,controller,serial=0,lastGraph=null;
 const cache=new Map();let cacheBytes=0;
 const CACHE_LIMIT=96*1024*1024;

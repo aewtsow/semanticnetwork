@@ -1,7 +1,8 @@
-# 无损数据发布与独立预览
+# 无损数据发布与部署
 
-本分支只用于 Preview，不更新 main、不替换正式站点。构建脚本遇到
-`VERCEL_ENV=production` 会明确退出，避免误发布。
+2026-10-06 的独立预览保留在 `preview/lossless-20261006`。
+2026-10-07 根据用户上线要求，正式版本由 `main` 构建发布；构建脚本只允许
+`VERCEL_GIT_COMMIT_REF=main` 的 Production 构建，其他分支仍用于 Preview。
 
 ## 存档
 
@@ -34,10 +35,10 @@ ZIP 已全文件 CRC 验证，SHA256 记录在同名 JSON 中。线上旧版另�
 Release 必须完整上传、可公开下载后才部署预览。所有数据为公开附件；不得上传原语料、
 账户信息、构建缓存或无关研究文件。不要让浏览器直接依赖 GitHub 附件跨域读取。
 
-## Vercel Preview
+## Vercel 部署
 
-使用现有 GitHub 连接，从 `preview/lossless-20261006` 分支创建 Preview。
-构建命令与输出目录由 `vercel.json` 配置，不改变项目 Production 分支。
+使用现有 GitHub 连接：`main` 发布正式站点，其他分支用于 Preview。
+构建命令与输出目录由 `vercel.json` 配置，不改变账户权限或付费方案。
 
 构建下载并校验 Release 附件，仅拆开 tar，不展开行内的 gzip。输出只含网页、vendor、
 原星图数据和压缩行；不会包含原始 8.63 GB 行文件。每个下载包最多重试三次，失败则
