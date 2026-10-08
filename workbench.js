@@ -6,7 +6,8 @@
   const state={mode:'classifier',center:ids.get('一棵'),wordCenter:ids.get('一棵'),classifierCenter:ids.get('一棵'),
     graph:null,paintEdges:[],manifest:null,worker:null,busy:false,token:0,view:{x:0,y:0,k:1},hover:null,drag:null,
     colors:new Map(),buildCount:0,frame:0,star:null,animation:null,ghosts:[],motionFrames:0,layoutSeed:0,resetLayout:false,inspected:null};
-  const palette=['#2563eb','#e11d48','#059669','#9333ea','#ea580c','#0891b2','#ca8a04','#c026d3','#65a30d','#4f46e5','#0d9488','#a16207','#be123c','#7c3aed','#0284c7','#15803d'];
+  // Original soft palette, with small hue/chroma adjustments for separation.
+  const palette=['#648d7d','#7f96b5','#b9a168','#ae8195','#8aa267','#a98265','#6aa0ad','#9d8bb6','#c28b7b','#a4a66c'];
   const svg=(tag,attrs={})=>{const e=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);return e;};
   const el=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;};
   const fmt=(v,d=3)=>v===null||v===undefined?'不可用':Number(v).toLocaleString('zh-CN',{maximumFractionDigits:d});
