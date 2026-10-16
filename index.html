@@ -4,12 +4,12 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="完整语境 PPMI 余弦与量词搭配的语义网络研究工作台">
   <title>中文量词语义网络</title>
-  <link rel="stylesheet" href="workbench.css?v=20260929-3">
+  <link rel="stylesheet" href="workbench.css?v=20261009-1">
   <script defer src="data/word_network_nodes.js"></script>
   <script defer src="data/classifier_noun_data.js"></script>
   <script defer src="semantic-core.js?v=20261007-1"></script>
   <script defer src="semantic-motion.js?v=20260929-3"></script>
-  <script defer src="workbench.js?v=20261007-3"></script>
+  <script defer src="workbench.js?v=20261009-1"></script>
 </head>
 <body>
 <header class="masthead"><div><span class="project-mark">量词研究</span><h1>中文量词语义网络</h1></div><span class="edition">完整语境 · 语义研究工作台</span></header>
@@ -61,8 +61,8 @@
   <details class="minor"><summary>计算方法</summary><p>相似性：完整原始语境的 PPMI 向量余弦；不降维。量词与名词分别聚类，中心不参与分组。固定 5 个随机种子，选取模块度最高的结果。</p><label for="resolution">社区分辨率</label><input id="resolution" type="number" min="0.1" max="3" step="0.1" value="1"><p id="dataDefinition"></p><a href="SEMANTIC_V2.md" target="_blank">方法与复现说明 ↗</a></details>
   <details class="minor"><summary>旧版对照</summary><p>旧搭配余弦和旧全局社区仅作历史对照，与新版不可直接混合比较。</p><a href="legacy.html" target="_blank" rel="noopener">打开旧版页面 ↗</a><p id="legacySummary">选择词语后可查看旧社区编号。</p></details>
 </details></aside>
-<section class="graph-panel" aria-label="语义网络画布">
-  <div class="graph-heading"><div><h2 id="centerTitle">一棵</h2><p id="graphStats">准备数据…</p><p id="pruneStats"></p></div><div class="view-actions"><button id="relayout">重新布局</button><button id="zoomOut" aria-label="缩小">−</button><button id="fit">适应画布</button><button id="zoomIn" aria-label="放大">＋</button></div></div>
+<section class="graph-panel" id="graphPanel" aria-label="语义网络画布">
+  <div class="graph-heading"><div><h2 id="centerTitle">一棵</h2><p id="graphStats">准备数据…</p><p id="pruneStats"></p></div><div class="view-actions"><label class="expanded-only expanded-labels" for="expandedLabels">标签<select id="expandedLabels"><option value="important">中心与重点词</option><option value="all">全部</option><option value="hover">仅悬停时</option></select></label><button id="relayout">重新布局</button><button id="zoomOut" aria-label="缩小">−</button><button id="fit">适应画布</button><button id="zoomIn" aria-label="放大">＋</button><button id="expandNetwork" aria-haspopup="dialog" aria-controls="networkDialog">展开网络 ⛶</button><button id="closeNetwork" class="expanded-only" aria-label="关闭展开网络">收起 ✕</button></div></div>
   <div id="stage" tabindex="0" aria-label="网络，可拖动平移、滚轮缩放；方向键平移，按 0 复位">
     <canvas id="edges" aria-hidden="true"></canvas><svg id="network" aria-label="节点"><g id="viewport"></g></svg>
     <div id="status" role="status" aria-live="polite">正在读取新版数据…</div><button id="retry" hidden>重新加载</button>
@@ -74,4 +74,5 @@
 </main>
 <footer><span id="footerStatus">三张图共用指标与固定视觉标尺</span><button id="openStar">星图 · 试验视图 ↗</button></footer>
 <div id="starHost" hidden><button id="starEscape">返回网络</button></div>
+<dialog id="networkDialog" aria-label="展开语义网络" aria-describedby="expandedHelp"><p id="expandedHelp" class="sr-only">网络占据整个页面。可缩放、拖动和切换中心，标签保持可读字号。按 Escape 或收起按钮返回。</p></dialog>
 </body></html>

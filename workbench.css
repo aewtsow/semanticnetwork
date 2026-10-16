@@ -123,3 +123,39 @@ footer{padding:12px 15px}
   #stage{min-height:320px}
 }
 @media(prefers-reduced-motion:reduce){.node{transition:none!important}}
+
+/* The same graph moves into a modal; no second canvas, worker or data cache. */
+.expanded-only{display:none}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+body.network-expanded{overflow:hidden}
+#networkDialog{position:fixed;inset:0;margin:0;padding:0;border:0;max-width:none;max-height:none;width:100%;height:100vh;height:100dvh;background:#fff;color:inherit;overflow:hidden}
+#networkDialog::backdrop{background:#fff}
+#networkDialog .graph-panel{width:100%;height:100%;min-height:0}
+#networkDialog .graph-heading{flex:0 0 auto;padding:12px max(16px,env(safe-area-inset-right)) 10px max(16px,env(safe-area-inset-left));border-bottom:1px solid var(--line)}
+#networkDialog .graph-heading h2{font-size:23px;margin-bottom:3px}
+#networkDialog #pruneStats{display:none}
+#networkDialog #stage{flex:1 1 0;min-height:0}
+#networkDialog .expanded-only{display:inline-flex}
+#networkDialog #expandNetwork{display:none}
+#networkDialog .view-actions{align-items:center}
+#networkDialog .expanded-labels{align-items:center;gap:6px;margin:0 7px 0 0;white-space:nowrap}
+#networkDialog .expanded-labels select{width:auto;height:30px;margin:0;font-size:11px}
+#networkDialog .legend{flex:0 0 auto;padding:7px 16px max(7px,env(safe-area-inset-bottom));gap:2px 15px}
+#networkDialog .legend p,#networkDialog #pmiLegend{display:none}
+#networkDialog .interaction-note{bottom:8px}
+@media(max-width:680px){
+  #networkDialog .graph-heading{position:relative;flex-wrap:wrap;gap:7px}
+  #networkDialog .graph-heading h2{padding-right:65px}
+  #networkDialog .graph-heading>div:first-child{width:100%}
+  #networkDialog .view-actions{width:100%;justify-content:flex-start;gap:5px}
+  #networkDialog #closeNetwork{position:absolute;top:12px;right:max(12px,env(safe-area-inset-right));margin:0}
+  #networkDialog .legend{font-size:9px;line-height:1.5}
+}
+@media(max-height:450px){
+  #networkDialog .graph-heading{flex-wrap:nowrap;padding-top:6px;padding-bottom:6px}
+  #networkDialog .graph-heading>div:first-child{width:auto}
+  #networkDialog .view-actions{width:auto}
+  #networkDialog .graph-heading h2{padding-right:0}
+  #networkDialog #closeNetwork{position:static;margin-left:0}
+  #networkDialog #graphStats,#networkDialog .legend{display:none}
+}
